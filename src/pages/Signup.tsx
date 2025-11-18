@@ -1,9 +1,12 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import './Login.css'
 import { checkDuplicate, signup } from '../api/authApi'
 
 const Signup = () => {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  
   const [formData, setFormData] = useState({
     userId: '',
     nickname: '',
@@ -29,9 +32,30 @@ const Signup = () => {
     password: '',
     confirmPassword: '',
   })
+  
+  // 카카오 로그인 후 회원가입 페이지로 온 경우 이메일 자동 입력
+  useEffect(() => {
+    const email = searchParams.get('email')
+    const fromKakao = searchParams.get('from') === 'kakao'
+    
+    if (fromKakao && email) {
+      setFormData(prev => ({
+        ...prev,
+        email: email,
+      }))
+      // 카카오에서 온 경우 이메일은 이미 확인된 상태이므로 verified 처리
+      setVerified(prev => ({
+        ...prev,
+        email: true,
+      }))
+      setFieldMessages(prev => ({
+        ...prev,
+        email: '카카오 이메일이 자동으로 입력되었습니다.',
+      }))
+    }
+  }, [searchParams])
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
-  const navigate = useNavigate()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fieldName = e.target.name as 'userId' | 'nickname' | 'email' | 'password' | 'confirmPassword'

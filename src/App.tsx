@@ -7,6 +7,7 @@ import './asset/styles/sidebar.css'
 import Sidebar from './pages/Sidebar'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import KakaoCallback from './pages/KakaoCallback'
 
 function App() {
   const location = useLocation()
@@ -18,11 +19,12 @@ function App() {
   }
 
   // 로그인/회원가입 페이지는 사이드바 없이 표시
-  if (isAuthPage) {
+  if (isAuthPage || location.pathname.startsWith('/auth/kakao')) {
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/auth/kakao/callback" element={<KakaoCallback />} />
       </Routes>
     )
   }

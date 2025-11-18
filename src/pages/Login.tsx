@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import './Login.css'
 import { login } from '../api/authApi'
+import { startKakaoLogin } from '../api/kakaoApi'
 import kakaoLoginImage from '../asset/images/kakao/kakao_login_medium_wide.png'
 
 const Login = () => {
@@ -9,6 +10,29 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+
+  // 카카오 로그인 후 리다이렉트된 경우 토큰 처리
+  useEffect(() => {
+    const token = searchParams.get('token')
+    if (token) {
+      // 토큰을 localStorage에 저장
+      localStorage.setItem('token', token)
+      
+      // 사용자 정보가 있으면 함께 저장 (백엔드에서 전달한 경우)
+      const user = searchParams.get('user')
+      if (user) {
+        try {
+          localStorage.setItem('user', user)
+        } catch (e) {
+          console.error('사용자 정보 저장 실패:', e)
+        }
+      }
+      
+      // 로그인 성공 시 홈으로 이동
+      navigate('/')
+    }
+  }, [searchParams, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,10 +106,7 @@ const Login = () => {
         <button 
           type="button" 
           className="kakao-login-button"
-          onClick={() => {
-            // TODO: 카카오 로그인 구현
-            console.log('카카오 로그인')
-          }}
+          onClick={startKakaoLogin}
         >
           <img 
             src={kakaoLoginImage} 
