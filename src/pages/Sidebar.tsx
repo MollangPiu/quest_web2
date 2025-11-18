@@ -59,6 +59,14 @@ const Sidebar:React.FC<SidebarProps> = ({ handleLogout }) => {
             <span className="nav-icon">⚙️</span>
             <span className="nav-text">프로필 변경</span>
           </Link>
+          <Link to="/login" className="nav-item">
+            <span className="nav-icon">🔒</span>
+            <span className="nav-text">로그인</span>
+          </Link>
+          <Link to="/signup" className="nav-item">
+            <span className="nav-icon">🔒</span>
+            <span className="nav-text">회원가입</span>
+          </Link>
         </nav>
 
         <div className="sidebar-footer">
