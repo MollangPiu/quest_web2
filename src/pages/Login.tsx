@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './Login.css'
+import { login } from '../api/authApi'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -8,7 +9,7 @@ const Login = () => {
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -18,11 +19,19 @@ const Login = () => {
       return
     }
 
-    // TODO: 실제 로그인 API 호출
-    console.log('로그인 시도:', { email, password })
-    
-    // 로그인 성공 시 홈으로 이동
-    // navigate('/')
+    try {
+      const result = await login(email, password)
+      
+      // 토큰과 사용자 정보 저장
+      localStorage.setItem('token', result.token)
+      localStorage.setItem('user', JSON.stringify(result.user))
+      
+      // 로그인 성공 시 홈으로 이동
+      navigate('/')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '로그인에 실패했습니다.'
+      setError(errorMessage)
+    }
   }
 
   return (

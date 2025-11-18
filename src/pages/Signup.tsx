@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './Login.css'
+import { checkDuplicate, signup } from '../api/authApi'
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -78,7 +79,7 @@ const Signup = () => {
     }
   }
 
-  const checkDuplicate = async (type: 'userId' | 'nickname' | 'email') => {
+  const handleCheckDuplicate = async (type: 'userId' | 'nickname' | 'email') => {
     const value = formData[type]
     const fieldName = type === 'userId' ? '아이디' : type === 'nickname' ? '닉네임' : '이메일'
     
@@ -112,21 +113,9 @@ const Signup = () => {
     })
 
     try {
-      // TODO: 실제 중복 확인 API 호출
-      // const response = await fetch(`/api/check-${type}`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ [type]: value }),
-      // })
-      // const data = await response.json()
+      const result = await checkDuplicate(type, value)
 
-      // 임시로 시뮬레이션 (실제로는 API 호출)
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // 임시: 항상 사용 가능하다고 가정 (실제로는 API 응답에 따라 처리)
-      const isAvailable = true
-
-      if (isAvailable) {
+      if (result.available) {
         setVerified({
           ...verified,
           [type]: true,
@@ -138,7 +127,7 @@ const Signup = () => {
       } else {
         setFieldMessages({
           ...fieldMessages,
-          [type]: `${fieldName}가 이미 사용 중입니다.`,
+          [type]: result.message || `${fieldName}가 이미 사용 중입니다.`,
         })
         setVerified({
           ...verified,
@@ -146,9 +135,10 @@ const Signup = () => {
         })
       }
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '중복 확인 중 오류가 발생했습니다.'
       setFieldMessages({
         ...fieldMessages,
-        [type]: '중복 확인 중 오류가 발생했습니다.',
+        [type]: errorMessage,
       })
     } finally {
       setChecking({
@@ -158,7 +148,7 @@ const Signup = () => {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -191,11 +181,20 @@ const Signup = () => {
       return
     }
 
-    // TODO: 실제 회원가입 API 호출
-    console.log('회원가입 시도:', formData)
-    
-    // 회원가입 성공 시 로그인 페이지로 이동
-    // navigate('/login')
+    try {
+      await signup({
+        userId: formData.userId,
+        nickname: formData.nickname,
+        email: formData.email,
+        password: formData.password,
+      })
+      
+      // 회원가입 성공 시 로그인 페이지로 이동
+      navigate('/login')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '회원가입에 실패했습니다.'
+      setError(errorMessage)
+    }
   }
 
   return (
@@ -224,7 +223,7 @@ const Signup = () => {
               />
               <button
                 type="button"
-                onClick={() => checkDuplicate('userId')}
+                onClick={() => handleCheckDuplicate('userId')}
                 disabled={checking.userId || !formData.userId}
                 className="check-button"
               >
@@ -253,7 +252,7 @@ const Signup = () => {
               />
               <button
                 type="button"
-                onClick={() => checkDuplicate('nickname')}
+                onClick={() => handleCheckDuplicate('nickname')}
                 disabled={checking.nickname || !formData.nickname}
                 className="check-button"
               >
@@ -282,7 +281,7 @@ const Signup = () => {
               />
               <button
                 type="button"
-                onClick={() => checkDuplicate('email')}
+                onClick={() => handleCheckDuplicate('email')}
                 disabled={checking.email || !formData.email}
                 className="check-button"
               >
