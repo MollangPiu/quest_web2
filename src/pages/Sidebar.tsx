@@ -1,20 +1,13 @@
-import { Routes, Route, Link } from 'react-router-dom'
-import Home from './pages/Home'
-import About from './pages/About'
-import Contact from './pages/Contact'
-import './App.css'
-import './asset/style.css'
+import React from "react";
+import { Link } from "react-router-dom";
 
-function App() {
-  const handleLogout = () => {
-    // 로그아웃 로직 구현
-    console.log('로그아웃')
-  }
+interface SidebarProps {
+    handleLogout: () => void
+};
 
-  return (
-    <div className="app">
-      {/* 사이드바 네비게이션 */}
-      <aside className="sidebar">
+const Sidebar:React.FC<SidebarProps> = ({ handleLogout }) => {
+    return (
+        <aside className="sidebar">
         <div className="sidebar-header">
           <div className="workspace-logo">
             <span className="logo-icon">🎯</span>
@@ -81,9 +74,7 @@ function App() {
           </button>
         </div>
       </aside>
-    </div>
-  )
-}
+    );
+};
 
-export default App
-
+export default Sidebar;
