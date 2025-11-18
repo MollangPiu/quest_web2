@@ -406,3 +406,55 @@
   width: 100%;
 }
 
+/* 소셜 로그인 구분선 */
+.social-login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.social-login-divider::before,
+.social-login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.social-login-divider span {
+  padding: 0 1rem;
+}
+
+/* 카카오 로그인 버튼 */
+.kakao-login-button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.kakao-login-button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.kakao-login-button:active {
+  transform: translateY(0);
+}
+
+.kakao-login-image {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+}
+

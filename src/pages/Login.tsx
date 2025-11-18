@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import './Login.css'
 import { login } from '../api/authApi'
+import kakaoLoginImage from '../asset/images/kakao/kakao_login_medium_wide.png'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -73,6 +74,25 @@ const Login = () => {
             로그인
           </button>
         </form>
+
+        <div className="social-login-divider">
+          <span>또는</span>
+        </div>
+
+        <button 
+          type="button" 
+          className="kakao-login-button"
+          onClick={() => {
+            // TODO: 카카오 로그인 구현
+            console.log('카카오 로그인')
+          }}
+        >
+          <img 
+            src={kakaoLoginImage} 
+            alt="카카오 로그인" 
+            className="kakao-login-image"
+          />
+        </button>
 
         <div className="auth-footer">
           <p>
