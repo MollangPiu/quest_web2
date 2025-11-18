@@ -29,6 +29,8 @@ const Signup = () => {
     password: '',
     confirmPassword: '',
   })
+  const [profileImage, setProfileImage] = useState<File | null>(null)
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +78,43 @@ const Signup = () => {
           confirmPassword: '',
         })
       }
+    }
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // 파일 크기 검사 (5MB 제한)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('이미지 파일 크기는 5MB 이하여야 합니다.')
+        return
+      }
+      
+      // 이미지 파일 형식 검사
+      if (!file.type.startsWith('image/')) {
+        setError('이미지 파일만 업로드 가능합니다.')
+        return
+      }
+
+      setProfileImage(file)
+      
+      // 미리보기 생성
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      setError('')
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setProfileImage(null)
+    setProfileImagePreview(null)
+    // 파일 입력 초기화
+    const fileInput = document.getElementById('profileImage') as HTMLInputElement
+    if (fileInput) {
+      fileInput.value = ''
     }
   }
 
@@ -201,12 +240,12 @@ const Signup = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <div className="auth-header">
-          <h1><span className="emoji">🎯</span> 퀘스트</h1>
-          <p>새 계정을 만드세요</p>
-        </div>
+          <div className="auth-header">
+            <h1><span className="emoji">🎯</span> 퀘스트</h1>
+            <p>새 계정을 만드세요</p>
+          </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
+          <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
@@ -330,6 +369,47 @@ const Signup = () => {
                 {fieldMessages.confirmPassword}
               </div>
             )}
+          </div>
+
+          {/* 프로필 이미지 업로드 */}
+          <div className="form-group">
+            <label>프로필 이미지 (선택사항)</label>
+            <div className="profile-image-upload">
+              {profileImagePreview ? (
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <img 
+                    src={profileImagePreview} 
+                    alt="프로필 미리보기" 
+                    className="profile-image-preview"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="remove-image-button"
+                    aria-label="이미지 제거"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="profile-image-placeholder">👤</div>
+              )}
+              <div className="file-input-wrapper">
+                <input
+                  type="file"
+                  id="profileImage"
+                  name="profileImage"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+                <label htmlFor="profileImage" className="file-input-label">
+                  {profileImagePreview ? '이미지 변경' : '이미지 선택'}
+                </label>
+              </div>
+              {profileImage && (
+                <div className="file-name">{profileImage.name}</div>
+              )}
+            </div>
           </div>
 
           <button type="submit" className="auth-button">
