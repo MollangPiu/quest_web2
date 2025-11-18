@@ -48,7 +48,7 @@ export const checkDuplicate = async (
   }
   else if (type === 'email') {
     endpoint = API_ENDPOINTS.AUTH.EMAIL_CHECK
-    requestBody = { email: value }
+    requestBody = { userEmail: value }
   }
   else {
     // 닉네임과 이메일은 추후 구현
