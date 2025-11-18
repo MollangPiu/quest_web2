@@ -79,6 +79,7 @@ const Signup = () => {
     }
   }
 
+  /** 중복검사 */
   const handleCheckDuplicate = async (type: 'userId' | 'nickname' | 'email') => {
     const value = formData[type]
     const fieldName = type === 'userId' ? '아이디' : type === 'nickname' ? '닉네임' : '이메일'
@@ -113,7 +114,7 @@ const Signup = () => {
     })
 
     try {
-      const result = await checkDuplicate(type, value)
+      const result = await checkDuplicate(type, value) //API 호출
 
       if (result.available) {
         setVerified({

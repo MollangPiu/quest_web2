@@ -21,6 +21,8 @@ export const API_ENDPOINTS = {
   AUTH: {
     CHECK_DUPLICATE: (type: string) => `/api/auth/check-${type}`,
     ID_CHECK: '/api/auth/idCheck',
+    NICKNAME_CHECK: '/api/auth/nicknameCheck',
+    EMAIL_CHECK: '/api/auth/emailCheck',
     LOGIN: '/api/auth/login',
     SIGNUP: '/api/auth/signup',
     LOGOUT: '/api/auth/logout',
