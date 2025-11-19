@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import './Login.css'
 import { checkDuplicate, signup } from '../api/authApi'
 import kakaoLoginImage from '../asset/images/kakao/kakao_login_small.png'
+import kakaoSharingImage from '../asset/images/kakao/kakaotalk_sharing_btn_small.png'
+import naverIconImage from '../asset/images/naver/btnG_아이콘원형.png'
 
 const Signup = () => {
   const [searchParams] = useSearchParams()
@@ -35,26 +37,36 @@ const Signup = () => {
   })
   
   const [isFromKakao, setIsFromKakao] = useState(false)
+  const [isFromSocial, setIsFromSocial] = useState(false)
   
-  // 카카오 로그인 후 회원가입 페이지로 온 경우 이메일 자동 입력
+  // 소셜 로그인 후 회원가입 페이지로 온 경우 이메일 자동 입력
   useEffect(() => {
     const email = searchParams.get('email')
-    const fromKakao = searchParams.get('from') === 'kakao'
+    const from = searchParams.get('from')
+    const isSocialLogin = from === 'kakao' || from === 'naver' || from === 'google'
     
-    if (fromKakao && email) {
-      setIsFromKakao(true)
+    if (isSocialLogin && email) {
+      setIsFromSocial(true)
+      
+      // 카카오에서 온 경우에만 카카오 이미지 표시
+      if (from === 'kakao') {
+        setIsFromKakao(true)
+      }
+      
       setFormData(prev => ({
         ...prev,
         email: email,
       }))
-      // 카카오에서 온 경우 이메일은 이미 확인된 상태이므로 verified 처리
+      // 소셜 로그인에서 온 경우 이메일은 이미 확인된 상태이므로 verified 처리
       setVerified(prev => ({
         ...prev,
         email: true,
       }))
+      
+      const providerName = from === 'kakao' ? '카카오' : from === 'naver' ? '네이버' : '구글'
       setFieldMessages(prev => ({
         ...prev,
-        email: '카카오 이메일이 자동으로 입력되었습니다.',
+        email: `${providerName} 이메일이 자동으로 입력되었습니다.`,
       }))
     }
   }, [searchParams])
@@ -285,6 +297,69 @@ const Signup = () => {
                 <div className="kakao-glow-effect"></div>
               </div>
               <p className="kakao-welcome-text">카카오 계정으로 회원가입을 진행합니다</p>
+            </div>
+          )}
+
+          {/* 소셜 로그인(카카오/네이버/구글)으로 온 경우에만 소셜 로그인 버튼 표시 */}
+          {isFromSocial && (
+            <div className="social-login-buttons-container">
+              <p className="social-login-title">소셜 로그인으로 간편하게 시작하세요</p>
+              <div className="social-buttons-wrapper">
+                <button 
+                  type="button" 
+                  className="social-login-button kakao-button"
+                  onClick={() => {
+                    // 카카오 로그인 처리
+                    console.log('카카오 로그인')
+                  }}
+                >
+                  <img 
+                    src={kakaoSharingImage} 
+                    alt="카카오 로그인" 
+                    className="social-button-icon"
+                  />
+                  <span className="social-button-text">카카오</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  className="social-login-button naver-button"
+                  onClick={() => {
+                    // 네이버 로그인 처리
+                    console.log('네이버 로그인')
+                  }}
+                >
+                  <img 
+                    src={naverIconImage} 
+                    alt="네이버 로그인" 
+                    className="social-button-icon"
+                  />
+                  <span className="social-button-text">네이버</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  className="social-login-button google-button gsi-material-button"
+                  onClick={() => {
+                    // 구글 로그인 처리
+                    console.log('구글 로그인')
+                  }}
+                >
+                  <div className="gsi-material-button-state"></div>
+                  <div className="gsi-material-button-content-wrapper">
+                    <div className="gsi-material-button-icon">
+                      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" xmlnsXlink="http://www.w3.org/1999/xlink" style={{ display: 'block' }}>
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                        <path fill="none" d="M0 0h48v48H0z"></path>
+                      </svg>
+                    </div>
+                    <span className="social-button-text">구글</span>
+                  </div>
+                </button>
+              </div>
             </div>
           )}
 
