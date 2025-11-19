@@ -458,3 +458,141 @@
   border-radius: 12px;
 }
 
+/* 카카오 환영 이미지 (회원가입 페이지용) */
+.kakao-welcome-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  animation: fadeInScale 0.8s ease-out;
+}
+
+.kakao-image-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.kakao-welcome-image {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  position: relative;
+  z-index: 2;
+  animation: imageAppear 1s ease-out;
+  filter: drop-shadow(0 4px 12px rgba(254, 229, 0, 0.3));
+}
+
+.kakao-glow-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  border-radius: 12px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(254, 229, 0, 0.4) 0%,
+    rgba(254, 229, 0, 0.2) 30%,
+    transparent 70%
+  );
+  animation: glowPulse 2s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.kakao-glow-effect::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140%;
+  height: 140%;
+  border-radius: 12px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(254, 229, 0, 0.3) 0%,
+    transparent 60%
+  );
+  animation: glowPulse 2s ease-in-out infinite 0.5s;
+}
+
+.kakao-glow-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 160%;
+  height: 160%;
+  border-radius: 12px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(254, 229, 0, 0.2) 0%,
+    transparent 50%
+  );
+  animation: glowPulse 2s ease-in-out infinite 1s;
+}
+
+.kakao-welcome-text {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 0.5rem;
+  animation: fadeInUp 0.8s ease-out 0.3s both;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes imageAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  50% {
+    transform: scale(1.05) translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

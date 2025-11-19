@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import './Login.css'
 import { checkDuplicate, signup } from '../api/authApi'
+import kakaoLoginImage from '../asset/images/kakao/kakao_login_small.png'
 
 const Signup = () => {
   const [searchParams] = useSearchParams()
@@ -33,12 +34,15 @@ const Signup = () => {
     confirmPassword: '',
   })
   
+  const [isFromKakao, setIsFromKakao] = useState(false)
+  
   // 카카오 로그인 후 회원가입 페이지로 온 경우 이메일 자동 입력
   useEffect(() => {
     const email = searchParams.get('email')
     const fromKakao = searchParams.get('from') === 'kakao'
     
     if (fromKakao && email) {
+      setIsFromKakao(true)
       setFormData(prev => ({
         ...prev,
         email: email,
@@ -268,6 +272,21 @@ const Signup = () => {
             <h1><span className="emoji">🎯</span> 퀘스트</h1>
             <p>새 계정을 만드세요</p>
           </div>
+
+          {/* 카카오 로그인으로 온 경우 카카오 이미지 표시 */}
+          {isFromKakao && (
+            <div className="kakao-welcome-container">
+              <div className="kakao-image-wrapper">
+                <img 
+                  src={kakaoLoginImage} 
+                  alt="카카오 로그인" 
+                  className="kakao-welcome-image"
+                />
+                <div className="kakao-glow-effect"></div>
+              </div>
+              <p className="kakao-welcome-text">카카오 계정으로 회원가입을 진행합니다</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="error-message">{error}</div>}
