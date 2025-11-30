@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>워크스페이스 리스트 모달</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 50px;
+        }
+
+        /* 트리거 버튼 */
+        .trigger-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .trigger-btn:hover {
+            background: #357abd;
+        }
+
+        /* 모달 오버레이 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 모달 컨테이너 */
+        .modal-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            animation: slideUp 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 모달 헤더 */
+        .modal-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .add-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .add-btn:hover {
+            background: #357abd;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        /* 검색 바 */
+        .search-bar {
+            padding: 16px 32px;
+            border-bottom: 1px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat 12px center;
+        }
+
+        .search-input:focus {
+            border-color: #4a90e2;
+        }
+
+        /* 모달 본문 (스크롤 가능) */
+        .modal-body {
+            padding: 24px 32px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* 워크스페이스 리스트 */
+        .workspace-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .workspace-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .workspace-item:hover {
+            border-color: #4a90e2;
+            background: #f8fbff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+        }
+
+        .workspace-item.active {
+            border-color: #4a90e2;
+            background: #f0f7ff;
+        }
+
+        .workspace-color {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+
+        .workspace-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .workspace-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .workspace-desc {
+            font-size: 13px;
+            color: #999;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .workspace-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-right: 12px;
+        }
+
+        .workspace-count {
+            font-size: 12px;
+            color: #666;
+            background: #f0f0f0;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .workspace-type {
+            font-size: 12px;
+            color: #666;
+            background: #e8f4fd;
+            padding: 4px 10px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .workspace-type.team {
+            background: #fff4e6;
+            color: #e67e22;
+        }
+
+        .workspace-type.personal {
+            background: #e8f4fd;
+            color: #3498db;
+        }
+
+        .workspace-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .workspace-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .workspace-item:hover .workspace-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            font-size: 18px;
+        }
+
+        .action-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .action-btn.delete:hover {
+            background: #fee;
+            color: #e74c3c;
+        }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-subtext {
+            font-size: 14px;
+            color: #bbb;
+        }
+
+        /* 모달 푸터 */
+        .modal-footer {
+            padding: 16px 32px;
+            border-top: 1px solid #e0e0e0;
+            background: #f9f9f9;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-info {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .footer-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            background: #4a90e2;
+            color: white;
+            transition: background 0.2s;
+        }
+
+        .footer-actions button:hover {
+            background: #357abd;
+        }
+
+        /* 애니메이션 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* 반응형 */
+        @media (max-width: 600px) {
+            .modal-container {
+                width: 95%;
+                max-height: 90vh;
+            }
+
+            .modal-header,
+            .search-bar,
+            .modal-body,
+            .modal-footer {
+                padding: 16px 20px;
+            }
+
+            .workspace-item {
+                padding: 12px;
+            }
+
+            .workspace-meta {
+                flex-direction: column;
+                gap: 4px;
+                align-items: flex-start;
+            }
+
+            .workspace-date {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 트리거 버튼 -->
+    <button class="trigger-btn" onclick="openModal()">
+        📂 내 워크스페이스 보기
+    </button>
+
+    <!-- 모달 오버레이 -->
+    <div class="modal-overlay" id="workspaceListModal">
+        <div class="modal-container">
+            <!-- 모달 헤더 -->
+            <div class="modal-header">
+                <h2>내 워크스페이스</h2>
+                <div class="header-actions">
+                    <button class="add-btn" onclick="addNewWorkspace()">
+                        <span>➕</span>
+                        <span>새로 만들기</span>
+                    </button>
+                    <button class="close-btn" onclick="closeModal()">&times;</button>
+                </div>
+            </div>
+
+            <!-- 검색 바 -->
+            <div class="search-bar">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    placeholder="워크스페이스 검색..."
+                    oninput="filterWorkspaces(this.value)"
+                />
+            </div>
+
+            <!-- 모달 본문 -->
+            <div class="modal-body">
+                <div class="workspace-list" id="workspaceList">
+                    <!-- 워크스페이스 리스트가 여기에 동적으로 추가됩니다 -->
+                </div>
+
+                <!-- 빈 상태 (검색 결과 없을 때) -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="empty-state-icon">🔍</div>
+                    <div class="empty-state-text">워크스페이스를 찾을 수 없습니다</div>
+                    <div class="empty-state-subtext">다른 검색어를 시도해보세요</div>
+                </div>
+            </div>
+
+            <!-- 모달 푸터 -->
+            <div class="modal-footer">
+                <div class="footer-info">
+                    총 <strong id="workspaceCount">0</strong>개의 워크스페이스
+                </div>
+                <div class="footer-actions">
+                    <button onclick="closeModal()">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 샘플 데이터
+        let workspaces = [
+            {
+                id: 1,
+                name: '마케팅 프로젝트',
+                description: '2024 신제품 마케팅 캠페인 관련 작업',
+                color: '#4a90e2',
+                icon: '📊',
+                type: 'personal',
+                questCount: 15,
+                memberCount: 1,
+                createdAt: '2024-01-15',
+                active: true
+            },
+            {
+                id: 2,
+                name: '개발팀 협업',
+                description: '웹사이트 리뉴얼 프로젝트',
+                color: '#e74c3c',
+                icon: '💻',
+                type: 'team',
+                questCount: 23,
+                memberCount: 5,
+                createdAt: '2024-01-10',
+                active: false
+            },
+            {
+                id: 3,
+                name: '디자인 시스템',
+                description: 'UI/UX 디자인 가이드라인 및 컴포넌트',
+                color: '#9b59b6',
+                icon: '🎨',
+                type: 'team',
+                questCount: 8,
+                memberCount: 3,
+                createdAt: '2024-01-05',
+                active: false
+            },
+            {
+                id: 4,
+                name: '고객 피드백',
+                description: '사용자 의견 수집 및 개선사항',
+                color: '#2ecc71',
+                icon: '💬',
+                type: 'personal',
+                questCount: 32,
+                memberCount: 1,
+                createdAt: '2024-01-01',
+                active: false
+            },
+            {
+                id: 5,
+                name: '연구 개발',
+                description: 'AI 기술 연구 및 POC',
+                color: '#f39c12',
+                icon: '🔬',
+                type: 'team',
+                questCount: 12,
+                memberCount: 8,
+                createdAt: '2023-12-20',
+                active: false
+            },
+            {
+                id: 6,
+                name: '영업 지원',
+                description: '영업 자료 및 제안서 관리',
+                color: '#1abc9c',
+                icon: '📈',
+                type: 'personal',
+                questCount: 19,
+                memberCount: 1,
+                createdAt: '2023-12-15',
+                active: false
+            }
+        ];
+
+        let allWorkspaces = [...workspaces];
+
+        // 모달 열기
+        function openModal() {
+            const modal = document.getElementById('workspaceListModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            renderWorkspaces(workspaces);
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            const modal = document.getElementById('workspaceListModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // 오버레이 클릭 시 모달 닫기
+        document.getElementById('workspaceListModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // 워크스페이스 렌더링
+        function renderWorkspaces(workspacesToRender) {
+            const listContainer = document.getElementById('workspaceList');
+            const emptyState = document.getElementById('emptyState');
+            const countElement = document.getElementById('workspaceCount');
+
+            if (workspacesToRender.length === 0) {
+                listContainer.style.display = 'none';
+                emptyState.style.display = 'block';
+                countElement.textContent = '0';
+                return;
+            }
+
+            listContainer.style.display = 'flex';
+            emptyState.style.display = 'none';
+            countElement.textContent = workspacesToRender.length;
+
+            listContainer.innerHTML = workspacesToRender.map(ws => {
+                const typeLabel = ws.type === 'personal' ? '👤 개인' : '👥 팀';
+                const memberInfo = ws.type === 'team' ? `멤버 ${ws.memberCount}명` : '';
+                
+                return `
+                <div class="workspace-item ${ws.active ? 'active' : ''}" onclick="selectWorkspace(${ws.id})">
+                    <div class="workspace-color" style="background: ${ws.color};">
+                        ${ws.icon}
+                    </div>
+                    <div class="workspace-info">
+                        <div class="workspace-name">${ws.name}</div>
+                        <div class="workspace-desc">${ws.description}</div>
+                    </div>
+                    <div class="workspace-meta">
+                        <div class="workspace-type ${ws.type}">${typeLabel}</div>
+                        ${ws.type === 'team' ? `<div class="workspace-count">${memberInfo}</div>` : ''}
+                        <div class="workspace-count">퀘스트 ${ws.questCount}개</div>
+                        <div class="workspace-date">${formatDate(ws.createdAt)}</div>
+                    </div>
+                    <div class="workspace-actions">
+                        <button class="action-btn" onclick="editWorkspace(event, ${ws.id})" title="편집">
+                            ✏️
+                        </button>
+                        <button class="action-btn delete" onclick="deleteWorkspace(event, ${ws.id})" title="삭제">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // 날짜 포맷팅
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return '오늘';
+            if (diffDays === 1) return '어제';
+            if (diffDays < 7) return `${diffDays}일 전`;
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)}주 전`;
+            if (diffDays < 365) return `${Math.floor(diffDays / 30)}개월 전`;
+            return `${Math.floor(diffDays / 365)}년 전`;
+        }
+
+        // 워크스페이스 선택
+        function selectWorkspace(id) {
+            workspaces.forEach(ws => ws.active = (ws.id === id));
+            renderWorkspaces(workspaces);
+            console.log('선택된 워크스페이스:', workspaces.find(ws => ws.id === id));
+            
+            // 여기에 실제 워크스페이스 전환 로직 추가
+            setTimeout(() => {
+                alert(`"${workspaces.find(ws => ws.id === id).name}" 워크스페이스로 전환되었습니다!`);
+                closeModal();
+            }, 300);
+        }
+
+        // 워크스페이스 편집
+        function editWorkspace(event, id) {
+            event.stopPropagation();
+            const workspace = workspaces.find(ws => ws.id === id);
+            console.log('편집:', workspace);
+            alert(`"${workspace.name}" 편집 기능 (여기에 편집 모달 연결)`);
+        }
+
+        // 워크스페이스 삭제
+        function deleteWorkspace(event, id) {
+            event.stopPropagation();
+            const workspace = workspaces.find(ws => ws.id === id);
+            
+            if (confirm(`"${workspace.name}" 워크스페이스를 삭제하시겠습니까?`)) {
+                workspaces = workspaces.filter(ws => ws.id !== id);
+                allWorkspaces = [...workspaces];
+                renderWorkspaces(workspaces);
+                console.log('삭제됨:', workspace);
+            }
+        }
+
+        // 새 워크스페이스 추가
+        function addNewWorkspace() {
+            alert('새 워크스페이스 만들기 (workspace-modal.html 연결)');
+            // 실제로는 워크스페이스 생성 모달을 열면 됩니다
+        }
+
+        // 검색 필터
+        function filterWorkspaces(searchTerm) {
+            const filtered = allWorkspaces.filter(ws => 
+                ws.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                ws.description.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            renderWorkspaces(filtered);
+        }
+
+        // 초기 렌더링 (테스트용)
+        renderWorkspaces(workspaces);
+    </script>
+</body>
+</html>
+
