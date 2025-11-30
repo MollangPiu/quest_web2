@@ -1,0 +1,2425 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>퀘스트 워크스페이스</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="workspace-container">
+    <!-- 사이드바 네비게이션 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="workspace-logo">
+          <span class="logo-icon">🎯</span>
+          <span class="logo-text">퀘스트</span>
+        </div>
+        <p class="workspace-type">개인 워크스페이스</p>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="today">
+          <span class="nav-icon">✨</span>
+          <span class="nav-text">오늘의 퀘스트</span>
+        </button>
+        <button class="nav-item" data-tab="calendar">
+          <span class="nav-icon">📅</span>
+          <span class="nav-text">일정</span>
+        </button>
+        
+        <!-- 프로젝트 관리 (서브메뉴 포함) -->
+        <div class="nav-group">
+          <button class="nav-item" data-tab="projects" id="projects-nav">
+            <span class="nav-icon">📁</span>
+            <span class="nav-text">프로젝트 관리</span>
+            <span class="nav-arrow">›</span>
+          </button>
+          <div class="sub-nav" id="projects-subnav">
+            <button class="sub-nav-item active" data-subtab="projects-list">
+              <span class="sub-icon">📁</span>
+              <span class="sub-text">프로젝트</span>
+            </button>
+            <button class="sub-nav-item" data-subtab="processes-list">
+              <span class="sub-icon">⚙️</span>
+              <span class="sub-text">과제</span>
+            </button>
+            <button class="sub-nav-item" data-subtab="quests-list">
+              <span class="sub-icon">⚡</span>
+              <span class="sub-text">퀘스트</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <button class="nav-item" data-tab="friends">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">친구 관리</span>
+        </button>
+        <button class="nav-item" data-tab="profile">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">프로필 변경</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar-big">👤</div>
+          <div class="user-details">
+            <span class="user-name">홍길동</span>
+            <span class="user-email">user@example.com</span>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()">
+          <span>🚪</span> 로그아웃
+        </button>
+      </div>
+    </aside>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="main-content">
+      
+      <!-- ==================== 오늘의 퀘스트 ==================== -->
+      <section id="today" class="tab-content active">
+        <div class="content-header">
+          <div>
+            <h2>✨ 오늘의 퀘스트</h2>
+            <p class="content-description">오늘 완료해야 할 퀘스트를 확인하세요</p>
+          </div>
+          <div class="header-right-section">
+            <div class="header-stats">
+              <div class="stat-box">
+                <span class="stat-number">9</span>
+                <span class="stat-label">전체</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number">3</span>
+                <span class="stat-label">완료</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number">6</span>
+                <span class="stat-label">남음</span>
+              </div>
+            </div>
+            <button class="btn-primary btn-create-quest" onclick="openQuestModal()">
+              <span class="btn-icon">✨</span>
+              <span class="btn-text">퀘스트 만들기</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 검색 및 필터 -->
+        <div class="today-filters">
+          <!-- 검색창 -->
+          <div class="search-row">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" class="search-input" id="quest-search" placeholder="퀘스트 검색...">
+            </div>
+            <select class="filter-select" id="project-filter">
+              <option value="all">📁 모든 프로젝트</option>
+              <option value="diet">📁 10kg 다이어트</option>
+              <option value="grad">📁 대학원 진학 준비</option>
+              <option value="english">📁 영어 공부</option>
+              <option value="self">📁 자기계발</option>
+            </select>
+          </div>
+
+          <!-- 필터 버튼 -->
+          <div class="filter-row">
+            <div class="filter-group">
+              <span class="filter-group-label">상태:</span>
+              <button class="filter-btn active" data-filter="status" data-value="all">전체</button>
+              <button class="filter-btn" data-filter="status" data-value="progress">진행중</button>
+              <button class="filter-btn" data-filter="status" data-value="completed">완료</button>
+            </div>
+
+            <div class="filter-group">
+              <span class="filter-group-label">기간:</span>
+              <button class="filter-btn active" data-filter="period" data-value="all">전체</button>
+              <button class="filter-btn" data-filter="period" data-value="daily">일간</button>
+              <button class="filter-btn" data-filter="period" data-value="weekly">주간</button>
+              <button class="filter-btn" data-filter="period" data-value="monthly">월간</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 오늘의 할 일 목록 -->
+        <div class="today-quests">
+          <!-- 완료되지 않은 퀘스트 -->
+          <div class="quest-section">
+            <h3 class="section-title">🔥 진행중 (<span class="progress-count">6</span>)</h3>
+            
+            <div class="quest-card" data-project="diet" data-period="daily" data-status="progress">
+              <div class="quest-checkbox">
+                <input type="checkbox" id="quest1">
+                <label for="quest1"></label>
+              </div>
+              <div class="quest-content">
+                <h4 class="quest-title">아침 30분 조깅</h4>
+                <p class="quest-desc">30분 유산소 운동</p>
+                <div class="quest-meta">
+                  <span class="meta-tag">📁 10kg 다이어트</span>
+                  <span class="meta-tag period-badge">📆 일간</span>
+                  <span class="meta-tag">⏰ 06:00</span>
+                </div>
+              </div>
+              <div class="quest-actions">
+                <button class="icon-btn" onclick="viewQuestDetail(1)">👁️</button>
+              </div>
+            </div>
+
+            <div class="quest-card" data-project="diet" data-period="daily" data-status="progress">
+              <div class="quest-checkbox">
+                <input type="checkbox" id="quest2">
+                <label for="quest2"></label>
+              </div>
+              <div class="quest-content">
+                <h4 class="quest-title">식단 일지 작성</h4>
+                <p class="quest-desc">오늘 먹은 음식과 칼로리 기록</p>
+                <div class="quest-meta">
+                  <span class="meta-tag">📁 10kg 다이어트</span>
+                  <span class="meta-tag period-badge">📆 일간</span>
+                  <span class="meta-tag">⏰ 20:00</span>
+                </div>
+              </div>
+              <div class="quest-actions">
+                <button class="icon-btn" onclick="viewQuestDetail(2)">👁️</button>
+              </div>
+            </div>
+
+            <div class="quest-card" data-project="english" data-period="weekly" data-status="progress">
+              <div class="quest-checkbox">
+                <input type="checkbox" id="quest3">
+                <label for="quest3"></label>
+              </div>
+              <div class="quest-content">
+                <h4 class="quest-title">영어 단어 50개 암기</h4>
+                <p class="quest-desc">토익 필수 단어 학습</p>
+                <div class="quest-meta">
+                  <span class="meta-tag">📁 영어 공부</span>
+                  <span class="meta-tag period-badge">📆 주간</span>
+                  <span class="meta-tag">⏰ 19:00</span>
+                </div>
+              </div>
+              <div class="quest-actions">
+                <button class="icon-btn" onclick="viewQuestDetail(3)">👁️</button>
+              </div>
+            </div>
+
+            <div class="quest-card" data-project="grad" data-period="weekly" data-status="progress">
+              <div class="quest-checkbox">
+                <input type="checkbox" id="quest4">
+                <label for="quest4"></label>
+              </div>
+              <div class="quest-content">
+                <h4 class="quest-title">논문 읽기</h4>
+                <p class="quest-desc">관련 논문 2편 정독</p>
+                <div class="quest-meta">
+                  <span class="meta-tag">📁 대학원 진학 준비</span>
+                  <span class="meta-tag period-badge">📆 주간</span>
+                  <span class="meta-tag">⏰ 14:00</span>
+                </div>
+              </div>
+              <div class="quest-actions">
+                <button class="icon-btn" onclick="viewQuestDetail(4)">👁️</button>
+              </div>
+            </div>
+
+            <div class="quest-card" data-project="diet" data-period="daily" data-status="progress">
+              <div class="quest-checkbox">
+                <input type="checkbox" id="quest5">
+                <label for="quest5"></label>
+              </div>
+              <div class="quest-content">
+                <h4 class="quest-title">물 2L 마시기</h4>
+                <p class="quest-desc">수분 섭취 체크</p>
+                <div class="quest-meta">
+                  <span class="meta-tag">📁 10kg 다이어트</span>
+                  <span class="meta-tag period-badge">📆 일간</span>
+                </div>
+              </div>
+              <div class="quest-actions">
+                <button class="icon-btn" onclick="viewQuestDetail(5)">👁️</button>
+              </div>
+            </div>
+
+            <div class="quest-card" data-project="english" data-period="monthly" data-status="progress">
+              <div class="quest-checkbox">
+                <input type="checkbox" id="quest9">
+                <label for="quest9"></label>
+              </div>
+              <div class="quest-content">
+                <h4 class="quest-title">모의고사 풀기</h4>
+                <p class="quest-desc">토익 실전 모의고사</p>
+                <div class="quest-meta">
+                  <span class="meta-tag">📁 영어 공부</span>
+                  <span class="meta-tag period-badge">📆 월간</span>
+                  <span class="meta-tag">⏰ 15:00</span>
+                </div>
+              </div>
+              <div class="quest-actions">
+                <button class="icon-btn" onclick="viewQuestDetail(9)">👁️</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 완료된 퀘스트 -->
+          <div class="quest-section">
+            <h3 class="section-title">✅ 완료 (<span class="completed-count">3</span>)</h3>
+            
+            <div class="quest-card completed" data-project="self" data-period="daily" data-status="completed">
+              <div class="quest-checkbox">
+                <input type="checkbox" id="quest6" checked>
+                <label for="quest6"></label>
+              </div>
+              <div class="quest-content">
+                <h4 class="quest-title">명상 10분</h4>
+                <p class="quest-desc">아침 명상으로 하루 시작</p>
+                <div class="quest-meta">
+                  <span class="meta-tag">📁 자기계발</span>
+                  <span class="meta-tag period-badge">📆 일간</span>
+                  <span class="meta-tag">⏰ 07:00</span>
+                </div>
+              </div>
+              <div class="quest-actions">
+                <button class="icon-btn" onclick="viewQuestDetail(6)">👁️</button>
+              </div>
+            </div>
+
+            <div class="quest-card completed" data-project="diet" data-period="daily" data-status="completed">
+              <div class="quest-checkbox">
+                <input type="checkbox" id="quest7" checked>
+                <label for="quest7"></label>
+              </div>
+              <div class="quest-content">
+                <h4 class="quest-title">아침 식사</h4>
+                <p class="quest-desc">건강한 아침 식사</p>
+                <div class="quest-meta">
+                  <span class="meta-tag">📁 10kg 다이어트</span>
+                  <span class="meta-tag period-badge">📆 일간</span>
+                  <span class="meta-tag">⏰ 08:00</span>
+                </div>
+              </div>
+              <div class="quest-actions">
+                <button class="icon-btn" onclick="viewQuestDetail(7)">👁️</button>
+              </div>
+            </div>
+
+            <div class="quest-card completed" data-project="diet" data-period="daily" data-status="completed">
+              <div class="quest-checkbox">
+                <input type="checkbox" id="quest8" checked>
+                <label for="quest8"></label>
+              </div>
+              <div class="quest-content">
+                <h4 class="quest-title">스트레칭</h4>
+                <p class="quest-desc">10분 전신 스트레칭</p>
+                <div class="quest-meta">
+                  <span class="meta-tag">📁 10kg 다이어트</span>
+                  <span class="meta-tag period-badge">📆 일간</span>
+                  <span class="meta-tag">⏰ 09:00</span>
+                </div>
+              </div>
+              <div class="quest-actions">
+                <button class="icon-btn" onclick="viewQuestDetail(8)">👁️</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 일정 ==================== -->
+      <section id="calendar" class="tab-content">
+        <div class="content-header">
+          <div>
+            <h2>📅 일정</h2>
+            <p class="content-description">캘린더 형태로 일정을 관리하세요</p>
+          </div>
+          <button class="btn-primary" onclick="addEvent()">+ 일정 추가</button>
+        </div>
+
+        <!-- 캘린더 플레이스홀더 -->
+        <div class="calendar-placeholder">
+          <div class="calendar-header">
+            <button class="calendar-nav-btn">◀</button>
+            <h3>2025년 11월</h3>
+            <button class="calendar-nav-btn">▶</button>
+          </div>
+          <div class="calendar-grid">
+            <div class="calendar-day-header">일</div>
+            <div class="calendar-day-header">월</div>
+            <div class="calendar-day-header">화</div>
+            <div class="calendar-day-header">수</div>
+            <div class="calendar-day-header">목</div>
+            <div class="calendar-day-header">금</div>
+            <div class="calendar-day-header">토</div>
+            
+            <!-- 날짜 셀 예시 -->
+            <div class="calendar-cell empty"></div>
+            <div class="calendar-cell empty"></div>
+            <div class="calendar-cell empty"></div>
+            <div class="calendar-cell empty"></div>
+            <div class="calendar-cell empty"></div>
+            <div class="calendar-cell">1</div>
+            <div class="calendar-cell">2</div>
+            <div class="calendar-cell">3</div>
+            <div class="calendar-cell">4</div>
+            <div class="calendar-cell">5</div>
+            <div class="calendar-cell">6</div>
+            <div class="calendar-cell">7</div>
+            <div class="calendar-cell">8</div>
+            <div class="calendar-cell today">9<div class="event-dot"></div></div>
+            <div class="calendar-cell">10</div>
+            <div class="calendar-cell">11</div>
+            <div class="calendar-cell">12</div>
+            <div class="calendar-cell">13<div class="event-dot"></div></div>
+            <div class="calendar-cell">14</div>
+            <div class="calendar-cell">15<div class="event-dot"></div></div>
+            <div class="calendar-cell">16</div>
+            <div class="calendar-cell">17</div>
+            <div class="calendar-cell">18</div>
+            <div class="calendar-cell">19</div>
+            <div class="calendar-cell">20<div class="event-dot"></div></div>
+            <div class="calendar-cell">21</div>
+            <div class="calendar-cell">22</div>
+            <div class="calendar-cell">23</div>
+            <div class="calendar-cell">24</div>
+            <div class="calendar-cell">25</div>
+            <div class="calendar-cell">26</div>
+            <div class="calendar-cell">27</div>
+            <div class="calendar-cell">28</div>
+            <div class="calendar-cell">29</div>
+            <div class="calendar-cell">30</div>
+          </div>
+        </div>
+
+        <!-- 다가오는 이벤트 -->
+        <div class="upcoming-events">
+          <h3>다가오는 이벤트</h3>
+          <div class="event-list">
+            <div class="event-item">
+              <div class="event-date">
+                <span class="event-day">13</span>
+                <span class="event-month">11월</span>
+              </div>
+              <div class="event-info">
+                <h4>대학원 면접</h4>
+                <p>오후 2시 - 본관 3층</p>
+              </div>
+            </div>
+            <div class="event-item">
+              <div class="event-date">
+                <span class="event-day">15</span>
+                <span class="event-month">11월</span>
+              </div>
+              <div class="event-info">
+                <h4>토익 시험</h4>
+                <p>오전 10시 - 시험장</p>
+              </div>
+            </div>
+            <div class="event-item">
+              <div class="event-date">
+                <span class="event-day">20</span>
+                <span class="event-month">11월</span>
+              </div>
+              <div class="event-info">
+                <h4>프로젝트 마감</h4>
+                <p>대학원 진학 준비 서류</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 프로젝트 관리 ==================== -->
+      <section id="projects" class="tab-content">
+        <!-- 프로젝트 관리 서브 탭 -->
+        <div class="sub-tabs">
+          <button class="sub-tab active" data-subtab="projects-list">프로젝트</button>
+          <button class="sub-tab" data-subtab="processes-list">과제</button>
+          <button class="sub-tab" data-subtab="quests-list">퀘스트</button>
+        </div>
+
+        <!-- 프로젝트 목록 -->
+        <div id="projects-list" class="sub-content active">
+          <div class="sub-header-intro">
+            <div class="intro-content">
+              <div class="intro-icon">📁</div>
+              <div class="intro-text">
+                <h3>프로젝트</h3>
+                <p>큰 목표를 프로젝트로 관리하고, 단계별 과제와 퀘스트로 체계적으로 달성하세요</p>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="openProjectModal()">
+              <span>✨</span> 프로젝트 만들기
+            </button>
+          </div>
+          
+          <div class="items-grid">
+            <div class="item-card">
+              <div class="card-header">
+                <h3>10kg 다이어트</h3>
+                <div class="card-actions">
+                  <button class="icon-btn" onclick="editProject(1)">✏️</button>
+                  <button class="icon-btn delete" onclick="deleteProject(1)">🗑️</button>
+                </div>
+              </div>
+              <p class="card-description">건강한 식단과 운동으로 목표 체중 달성하기</p>
+              <div class="card-meta">
+                <span class="meta-item">📅 2025-01-01 ~ 2025-03-31</span>
+                <span class="meta-item">⚙️ 3개 과제</span>
+              </div>
+              <div class="card-progress">
+                <div class="progress-info">
+                  <span>진행률</span>
+                  <span class="progress-percent">65%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 65%"></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span class="status-badge status-active">진행중</span>
+              </div>
+            </div>
+
+            <div class="item-card">
+              <div class="card-header">
+                <h3>대학원 진학 준비</h3>
+                <div class="card-actions">
+                  <button class="icon-btn" onclick="editProject(2)">✏️</button>
+                  <button class="icon-btn delete" onclick="deleteProject(2)">🗑️</button>
+                </div>
+              </div>
+              <p class="card-description">학업 준비와 입학 서류 완성</p>
+              <div class="card-meta">
+                <span class="meta-item">📅 2025-01-15 ~ 2025-06-30</span>
+                <span class="meta-item">⚙️ 5개 과제</span>
+              </div>
+              <div class="card-progress">
+                <div class="progress-info">
+                  <span>진행률</span>
+                  <span class="progress-percent">40%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 40%"></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span class="status-badge status-active">진행중</span>
+              </div>
+            </div>
+
+            <div class="item-card">
+              <div class="card-header">
+                <h3>영어 공부</h3>
+                <div class="card-actions">
+                  <button class="icon-btn" onclick="editProject(3)">✏️</button>
+                  <button class="icon-btn delete" onclick="deleteProject(3)">🗑️</button>
+                </div>
+              </div>
+              <p class="card-description">토익 900점 목표</p>
+              <div class="card-meta">
+                <span class="meta-item">📅 2025-02-01 ~ 2025-04-30</span>
+                <span class="meta-item">⚙️ 4개 과제</span>
+              </div>
+              <div class="card-progress">
+                <div class="progress-info">
+                  <span>진행률</span>
+                  <span class="progress-percent">80%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 80%"></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <span class="status-badge status-active">진행중</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 과제 목록 -->
+        <div id="processes-list" class="sub-content">
+          <div class="sub-header-intro">
+            <div class="intro-content">
+              <div class="intro-icon">⚙️</div>
+              <div class="intro-text">
+                <h3>과제</h3>
+                <p>프로젝트를 달성하기 위한 세부 과제를 설계하고, 각 과제마다 필요한 퀘스트를 배정하세요</p>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="openProcessModal()">
+              <span>✨</span> 과제 만들기
+            </button>
+          </div>
+
+          <div class="items-list">
+            <div class="list-item">
+              <div class="list-item-left">
+                <span class="status-badge status-active">진행중</span>
+                <div class="item-info">
+                  <h3>운동하기</h3>
+                  <p class="item-description">주 3회 유산소 + 근력운동</p>
+                  <div class="item-tags">
+                    <span class="tag">📁 10kg 다이어트</span>
+                    <span class="tag">⚡ 12개 퀘스트</span>
+                  </div>
+                </div>
+              </div>
+              <div class="list-item-right">
+                <div class="process-stats">
+                  <div class="stat-item">
+                    <span class="stat-label">완료됨</span>
+                    <span class="stat-value">9개</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">자동추가</span>
+                    <span class="stat-value">12개</span>
+                  </div>
+                </div>
+                <div class="item-actions">
+                  <button class="btn-secondary" onclick="editProcess(1)">✏️ 수정</button>
+                  <button class="btn-secondary delete" onclick="deleteProcess(1)">🗑️ 삭제</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="list-item">
+              <div class="list-item-left">
+                <span class="status-badge status-active">진행중</span>
+                <div class="item-info">
+                  <h3>식단 관리</h3>
+                  <p class="item-description">칼로리 제한 및 단백질 섭취</p>
+                  <div class="item-tags">
+                    <span class="tag">📁 10kg 다이어트</span>
+                    <span class="tag">⚡ 8개 퀘스트</span>
+                  </div>
+                </div>
+              </div>
+              <div class="list-item-right">
+                <div class="process-stats">
+                  <div class="stat-item">
+                    <span class="stat-label">완료됨</span>
+                    <span class="stat-value">5개</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">자동추가</span>
+                    <span class="stat-value">8개</span>
+                  </div>
+                </div>
+                <div class="item-actions">
+                  <button class="btn-secondary" onclick="editProcess(2)">✏️ 수정</button>
+                  <button class="btn-secondary delete" onclick="deleteProcess(2)">🗑️ 삭제</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="list-item">
+              <div class="list-item-left">
+                <span class="status-badge status-pending">진행전</span>
+                <div class="item-info">
+                  <h3>서류 준비</h3>
+                  <p class="item-description">자기소개서, 추천서, 성적증명서</p>
+                  <div class="item-tags">
+                    <span class="tag">📁 대학원 진학 준비</span>
+                    <span class="tag">⚡ 5개 퀘스트</span>
+                  </div>
+                </div>
+              </div>
+              <div class="list-item-right">
+                <div class="process-stats">
+                  <div class="stat-item">
+                    <span class="stat-label">완료됨</span>
+                    <span class="stat-value">0개</span>
+                  </div>
+                  <div class="stat-item">
+                    <span class="stat-label">자동추가</span>
+                    <span class="stat-value">5개</span>
+                  </div>
+                </div>
+                <div class="item-actions">
+                  <button class="btn-secondary" onclick="editProcess(3)">✏️ 수정</button>
+                  <button class="btn-secondary delete" onclick="deleteProcess(3)">🗑️ 삭제</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 퀘스트 목록 -->
+        <div id="quests-list" class="sub-content">
+          <div class="sub-header-intro">
+            <div class="intro-content">
+              <div class="intro-icon">⚡</div>
+              <div class="intro-text">
+                <h3>퀘스트</h3>
+                <p>실제로 수행할 단위 행동을 퀘스트로 만들고, 반복 주기와 일정을 설정하여 TO DO를 자동 생성하세요</p>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="openQuestModal()">
+              <span>✨</span> 퀘스트 만들기
+            </button>
+          </div>
+
+          <div class="items-list">
+            <!-- 진행중 퀘스트 - 파란색 -->
+            <div class="list-item quest-in-progress">
+              <div class="list-item-left">
+                <div class="badge-group">
+                  <span class="quest-type-badge repeat">🔄 반복형</span>
+                  <span class="quest-status-badge in-progress">🔥 진행중</span>
+                </div>
+                <div class="item-info">
+                  <h3><span class="quest-emoji">🏃</span>아침 30분 조깅</h3>
+                  <p class="item-description">매일 아침 6시, 30분 유산소 운동</p>
+                  <div class="item-tags">
+                    <span class="tag">📁 10kg 다이어트</span>
+                    <span class="tag">⚙️ 운동하기</span>
+                    <span class="tag">📅 매일 반복</span>
+                    <span class="tag">⏰ 06:00</span>
+                  </div>
+                </div>
+              </div>
+              <div class="list-item-right">
+                <div class="quest-stats">
+                  <div class="stat-item-simple">
+                    <span class="stat-icon">✨</span>
+                    <span class="stat-value-large">68회</span>
+                  </div>
+                </div>
+                <div class="item-actions">
+                  <button class="btn-secondary" onclick="editQuest(1)">✏️ 수정</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 완료된 퀘스트 - 초록색 -->
+            <div class="list-item quest-completed">
+              <div class="list-item-left">
+                <div class="badge-group">
+                  <span class="quest-type-badge repeat">🔄 반복형</span>
+                  <span class="quest-status-badge completed">✅ 완료</span>
+                </div>
+                <div class="item-info">
+                  <h3><span class="quest-emoji">📚</span>영어 단어 50개 암기</h3>
+                  <p class="item-description">매주 월, 수, 금 저녁 7시</p>
+                  <div class="item-tags">
+                    <span class="tag">📁 영어 공부</span>
+                    <span class="tag">⚙️ 영어 단어 암기</span>
+                    <span class="tag">📅 주 3회 (월/수/금)</span>
+                    <span class="tag">⏰ 19:00</span>
+                  </div>
+                </div>
+              </div>
+              <div class="list-item-right">
+                <div class="quest-stats">
+                  <div class="stat-item-simple">
+                    <span class="stat-icon">✨</span>
+                    <span class="stat-value-large">36회</span>
+                  </div>
+                </div>
+                <div class="item-actions">
+                  <button class="btn-secondary" onclick="editQuest(2)">✏️ 수정</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 중단된 퀘스트 - 주황색 -->
+            <div class="list-item quest-paused">
+              <div class="list-item-left">
+                <div class="badge-group">
+                  <span class="quest-type-badge repeat">🔄 반복형</span>
+                  <span class="quest-status-badge paused">⏸️ 중단</span>
+                </div>
+                <div class="item-info">
+                  <h3><span class="quest-emoji">📖</span>매일 책 30분 읽기</h3>
+                  <p class="item-description">저녁 10시 독서 시간</p>
+                  <div class="item-tags">
+                    <span class="tag">📁 자기계발</span>
+                    <span class="tag">⚙️ 독서하기</span>
+                    <span class="tag">📅 매일 반복</span>
+                    <span class="tag">⏰ 22:00</span>
+                  </div>
+                </div>
+              </div>
+              <div class="list-item-right">
+                <div class="quest-stats">
+                  <div class="stat-item-simple">
+                    <span class="stat-icon">✨</span>
+                    <span class="stat-value-large">12회</span>
+                  </div>
+                </div>
+                <div class="item-actions">
+                  <button class="btn-secondary" onclick="editQuest(3)">✏️ 수정</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 진행전 퀘스트 - 회색 -->
+            <div class="list-item quest-pending">
+              <div class="list-item-left">
+                <div class="badge-group">
+                  <span class="quest-type-badge simple">✓ 단순형</span>
+                  <span class="quest-status-badge pending">⚪ 진행전</span>
+                </div>
+                <div class="item-info">
+                  <h3><span class="quest-emoji">✍️</span>자기소개서 작성</h3>
+                  <p class="item-description">대학원 입학 자기소개서 초안 작성</p>
+                  <div class="item-tags">
+                    <span class="tag">📁 대학원 진학 준비</span>
+                    <span class="tag">⚙️ 서류 준비</span>
+                    <span class="tag">📅 2025-03-15</span>
+                  </div>
+                </div>
+              </div>
+              <div class="list-item-right">
+                <div class="quest-stats">
+                  <div class="stat-item-simple">
+                    <span class="stat-icon">✨</span>
+                    <span class="stat-value-large">0회</span>
+                  </div>
+                </div>
+                <div class="item-actions">
+                  <button class="btn-secondary" onclick="editQuest(4)">✏️ 수정</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 프로젝트 수정 페이지 ==================== -->
+      <section id="project-edit" class="tab-content">
+        <div class="create-page-header">
+          <div class="header-left">
+            <button class="btn-back" onclick="closeProjectEditPage()">
+              <span>←</span> 돌아가기
+            </button>
+            <h2>📁 프로젝트 수정</h2>
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="closeProjectEditPage()">취소</button>
+            <button class="btn-primary" onclick="updateProject()">
+              <span>✨</span> 수정하기
+            </button>
+          </div>
+        </div>
+
+        <div class="create-page-content">
+          <div class="process-create-container">
+            <!-- 기본 정보 -->
+            <div class="form-section">
+              <h3 class="section-title">📝 기본 정보</h3>
+              
+              <div class="form-group">
+                <label class="form-label">프로젝트 제목 <span class="required">*</span></label>
+                <input type="text" class="form-input" id="edit-project-name" placeholder="예: 10kg 다이어트" maxlength="50">
+                <span class="form-hint">최대 50자</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">프로젝트 설명</label>
+                <textarea class="form-textarea" id="edit-project-desc" rows="4" placeholder="프로젝트에 대한 설명을 입력하세요" maxlength="500"></textarea>
+                <span class="form-hint">최대 500자</span>
+              </div>
+            </div>
+
+            <!-- 기간 설정 -->
+            <div class="form-section">
+              <h3 class="section-title">📅 기간 설정</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">시작일 <span class="required">*</span></label>
+                  <input type="date" class="form-input" id="edit-project-start-date">
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">종료일 <span class="required">*</span></label>
+                  <input type="date" class="form-input" id="edit-project-end-date">
+                </div>
+              </div>
+              
+              <span class="form-hint">프로젝트 진행 기간을 설정하세요</span>
+            </div>
+
+            <!-- 상태 설정 -->
+            <div class="form-section">
+              <h3 class="section-title">🎯 상태 설정</h3>
+              
+              <div class="form-group">
+                <label class="form-label">프로젝트 상태 <span class="required">*</span></label>
+                <select class="form-select" id="edit-project-status">
+                  <option value="active">진행중</option>
+                  <option value="pending">진행전</option>
+                  <option value="completed">완료</option>
+                  <option value="paused">중단</option>
+                </select>
+                <span class="form-hint">현재 프로젝트의 상태를 선택하세요</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 프로젝트 만들기 페이지 ==================== -->
+      <section id="project-create" class="tab-content">
+        <div class="create-page-header">
+          <div class="header-left">
+            <button class="btn-back" onclick="closeProjectCreatePage()">
+              <span>←</span> 돌아가기
+            </button>
+            <h2>📁 프로젝트 만들기</h2>
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="closeProjectCreatePage()">취소</button>
+            <button class="btn-primary" onclick="saveProject()">
+              <span>✨</span> 저장하기
+            </button>
+          </div>
+        </div>
+
+        <div class="create-page-content">
+          <div class="process-create-container">
+            <!-- 기본 정보 -->
+            <div class="form-section">
+              <h3 class="section-title">📝 기본 정보</h3>
+              
+              <div class="form-group">
+                <label class="form-label">프로젝트 제목 <span class="required">*</span></label>
+                <input type="text" class="form-input" id="project-name" placeholder="예: 10kg 다이어트" maxlength="50">
+                <span class="form-hint">최대 50자</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">프로젝트 설명</label>
+                <textarea class="form-textarea" id="project-desc" rows="4" placeholder="프로젝트에 대한 설명을 입력하세요" maxlength="500"></textarea>
+                <span class="form-hint">최대 500자</span>
+              </div>
+            </div>
+
+            <!-- 기간 설정 -->
+            <div class="form-section">
+              <h3 class="section-title">📅 기간 설정</h3>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">시작일 <span class="required">*</span></label>
+                  <input type="date" class="form-input" id="project-start-date">
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">종료일 <span class="required">*</span></label>
+                  <input type="date" class="form-input" id="project-end-date">
+                </div>
+              </div>
+              
+              <span class="form-hint">프로젝트 진행 기간을 설정하세요</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 과제 수정 페이지 ==================== -->
+      <section id="process-edit" class="tab-content">
+        <div class="create-page-header">
+          <div class="header-left">
+            <button class="btn-back" onclick="closeProcessEditPage()">
+              <span>←</span> 돌아가기
+            </button>
+            <h2>⚙️ 과제 수정</h2>
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="closeProcessEditPage()">취소</button>
+            <button class="btn-primary" onclick="updateProcess()">
+              <span>✨</span> 수정하기
+            </button>
+          </div>
+        </div>
+
+        <div class="create-page-content">
+          <div class="process-create-container">
+            <!-- 기본 정보 -->
+            <div class="form-section">
+              <h3 class="section-title">📝 기본 정보</h3>
+              
+              <div class="form-group">
+                <label class="form-label">과제 제목 <span class="required">*</span></label>
+                <input type="text" class="form-input" id="edit-process-name" placeholder="예: 운동하기" maxlength="50">
+                <span class="form-hint">최대 50자</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">과제 설명</label>
+                <textarea class="form-textarea" id="edit-process-desc" rows="4" placeholder="과제에 대한 설명을 입력하세요" maxlength="500"></textarea>
+                <span class="form-hint">최대 500자</span>
+              </div>
+            </div>
+
+            <!-- 프로젝트 선택 -->
+            <div class="form-section">
+              <h3 class="section-title">📁 프로젝트 선택</h3>
+              
+              <div class="form-group">
+                <label class="form-label">프로젝트 <span class="required">*</span></label>
+                <select class="form-select" id="edit-process-project">
+                  <option value="">프로젝트를 선택하세요</option>
+                  <option value="diet">💪 10kg 다이어트</option>
+                  <option value="grad">🎓 대학원 진학 준비</option>
+                  <option value="english">🌍 영어 공부</option>
+                  <option value="self">✨ 자기계발</option>
+                </select>
+                <span class="form-hint">이 과제가 속할 프로젝트를 선택하세요</span>
+              </div>
+            </div>
+
+            <!-- 상태 설정 -->
+            <div class="form-section">
+              <h3 class="section-title">🎯 상태 설정</h3>
+              
+              <div class="form-group">
+                <label class="form-label">과제 상태 <span class="required">*</span></label>
+                <select class="form-select" id="edit-process-status">
+                  <option value="active">진행중</option>
+                  <option value="pending">진행전</option>
+                  <option value="completed">완료</option>
+                  <option value="paused">중단</option>
+                </select>
+                <span class="form-hint">현재 과제의 상태를 선택하세요</span>
+              </div>
+            </div>
+
+            <!-- 퀘스트 연결하기 -->
+            <div class="form-section">
+              <h3 class="section-title">⚡ 퀘스트 연결하기</h3>
+              
+              <div class="toggle-section">
+                <div class="toggle-header">
+                  <div class="toggle-info">
+                    <label class="form-label">기존 퀘스트 연결</label>
+                    <p class="form-hint">💡 ON: 기존에 연결된 퀘스트를 이 과제에도 추가 / OFF: 이 과제에는 알아서 퀘스트 추가</p>
+                  </div>
+                  <button class="toggle-btn-large off" id="edit-quest-connect-toggle" onclick="toggleEditQuestConnect()">
+                    <span class="toggle-status">OFF</span>
+                  </button>
+                </div>
+
+                <!-- 퀘스트 선택 영역 (OFF일 때 숨김) -->
+                <div id="edit-quest-connect-section" style="display: none; margin-top: 24px;">
+                  <div class="form-group">
+                    <label class="form-label">연결할 퀘스트 선택</label>
+                    
+                    <!-- 선택된 퀘스트 태그 -->
+                    <div class="selected-quests" id="edit-selected-quests">
+                      <p class="empty-message">연결할 퀘스트를 선택하세요</p>
+                    </div>
+                    
+                    <!-- 퀘스트 검색 -->
+                    <div class="quest-search-box">
+                      <span class="search-icon">🔍</span>
+                      <input type="text" class="search-input" id="edit-quest-search-input" placeholder="퀘스트 검색..." oninput="filterEditQuestList(this.value)">
+                    </div>
+
+                    <!-- 퀘스트 목록 -->
+                    <div class="quest-list-container">
+                      <div class="quest-list-scroll">
+                        <div class="quest-group">
+                          <div class="quest-items">
+                            <label class="quest-checkbox-item">
+                              <input type="checkbox" value="1" onchange="toggleEditQuestSelect(event, '1', '🏃 아침 30분 조깅', '10kg 다이어트', 'in-progress')">
+                              <span class="checkbox-mark"></span>
+                              <span class="quest-item-info">
+                                <span class="quest-item-name">🏃 아침 30분 조깅</span>
+                                <span class="quest-item-meta">
+                                  <span class="meta-tag">📁 10kg 다이어트</span>
+                                </span>
+                              </span>
+                            </label>
+                            
+                            <label class="quest-checkbox-item">
+                              <input type="checkbox" value="2" onchange="toggleEditQuestSelect(event, '2', '🍎 식단 일지 작성', '10kg 다이어트', 'in-progress')">
+                              <span class="checkbox-mark"></span>
+                              <span class="quest-item-info">
+                                <span class="quest-item-name">🍎 식단 일지 작성</span>
+                                <span class="quest-item-meta">
+                                  <span class="meta-tag">📁 10kg 다이어트</span>
+                                </span>
+                              </span>
+                            </label>
+
+                            <label class="quest-checkbox-item">
+                              <input type="checkbox" value="3" onchange="toggleEditQuestSelect(event, '3', '📚 영어 단어 50개 암기', '영어 공부', 'in-progress')">
+                              <span class="checkbox-mark"></span>
+                              <span class="quest-item-info">
+                                <span class="quest-item-name">📚 영어 단어 50개 암기</span>
+                                <span class="quest-item-meta">
+                                  <span class="meta-tag">📁 영어 공부</span>
+                                </span>
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span class="form-hint">💡 선택한 퀘스트들을 이 과제와 연결합니다</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 과제 만들기 페이지 ==================== -->
+      <section id="process-create" class="tab-content">
+        <div class="create-page-header">
+          <div class="header-left">
+            <button class="btn-back" onclick="closeProcessCreatePage()">
+              <span>←</span> 돌아가기
+            </button>
+            <h2>⚙️ 과제 만들기</h2>
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="closeProcessCreatePage()">취소</button>
+            <button class="btn-primary" onclick="saveProcess()">
+              <span>✨</span> 저장하기
+            </button>
+          </div>
+        </div>
+
+        <div class="create-page-content">
+          <div class="process-create-container">
+            <!-- 기본 정보 -->
+            <div class="form-section">
+              <h3 class="section-title">📝 기본 정보</h3>
+              
+              <div class="form-group">
+                <label class="form-label">과제 제목 <span class="required">*</span></label>
+                <input type="text" class="form-input" id="process-name" placeholder="예: 운동하기" maxlength="50">
+                <span class="form-hint">최대 50자</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">과제 설명</label>
+                <textarea class="form-textarea" id="process-desc" rows="4" placeholder="과제에 대한 설명을 입력하세요" maxlength="500"></textarea>
+                <span class="form-hint">최대 500자</span>
+              </div>
+            </div>
+
+            <!-- 프로젝트 선택 -->
+            <div class="form-section">
+              <h3 class="section-title">📁 프로젝트 선택</h3>
+              
+              <div class="form-group">
+                <label class="form-label">프로젝트 <span class="required">*</span></label>
+                <select class="form-select" id="process-project">
+                  <option value="">프로젝트를 선택하세요</option>
+                  <option value="diet">💪 10kg 다이어트</option>
+                  <option value="grad">🎓 대학원 진학 준비</option>
+                  <option value="english">🌍 영어 공부</option>
+                  <option value="self">✨ 자기계발</option>
+                </select>
+                <span class="form-hint">이 과제가 속할 프로젝트를 선택하세요</span>
+              </div>
+            </div>
+
+            <!-- 퀘스트 연결하기 -->
+            <div class="form-section">
+              <h3 class="section-title">⚡ 퀘스트 연결하기</h3>
+              
+              <div class="toggle-section">
+                <div class="toggle-header">
+                  <div class="toggle-info">
+                    <label class="form-label">기존 퀘스트 연결</label>
+                    <p class="form-hint">💡 ON: 기존에 연결된 퀘스트를 이 과제에도 추가 / OFF: 이 과제에는 알아서 퀘스트 추가</p>
+                  </div>
+                  <button class="toggle-btn-large off" id="quest-connect-toggle" onclick="toggleQuestConnect()">
+                    <span class="toggle-status">OFF</span>
+                  </button>
+                </div>
+
+                <!-- 퀘스트 선택 영역 (OFF일 때 숨김) -->
+                <div id="quest-connect-section" style="display: none; margin-top: 24px;">
+                  <div class="form-group">
+                    <label class="form-label">연결할 퀘스트 선택</label>
+                    
+                    <!-- 선택된 퀘스트 태그 -->
+                    <div class="selected-quests" id="selected-quests">
+                      <p class="empty-message">연결할 퀘스트를 선택하세요</p>
+                    </div>
+                    
+                    <!-- 퀘스트 검색 -->
+                    <div class="quest-search-box">
+                      <span class="search-icon">🔍</span>
+                      <input type="text" class="search-input" id="quest-search-input" placeholder="퀘스트 검색..." oninput="filterQuestList(this.value)">
+                    </div>
+
+                    <!-- 퀘스트 목록 -->
+                    <div class="quest-list-container">
+                      <div class="quest-list-scroll">
+                        <div class="quest-group">
+                          <div class="quest-items">
+                            <label class="quest-checkbox-item">
+                              <input type="checkbox" value="1" onchange="toggleQuestSelect(event, '1', '🏃 아침 30분 조깅', '10kg 다이어트', 'in-progress')">
+                              <span class="checkbox-mark"></span>
+                              <span class="quest-item-info">
+                                <span class="quest-item-name">🏃 아침 30분 조깅</span>
+                                <span class="quest-item-meta">
+                                  <span class="meta-tag">📁 10kg 다이어트</span>
+                                </span>
+                              </span>
+                            </label>
+                            
+                            <label class="quest-checkbox-item">
+                              <input type="checkbox" value="2" onchange="toggleQuestSelect(event, '2', '🍎 식단 일지 작성', '10kg 다이어트', 'in-progress')">
+                              <span class="checkbox-mark"></span>
+                              <span class="quest-item-info">
+                                <span class="quest-item-name">🍎 식단 일지 작성</span>
+                                <span class="quest-item-meta">
+                                  <span class="meta-tag">📁 10kg 다이어트</span>
+                                </span>
+                              </span>
+                            </label>
+
+                            <label class="quest-checkbox-item">
+                              <input type="checkbox" value="3" onchange="toggleQuestSelect(event, '3', '📚 영어 단어 50개 암기', '영어 공부', 'in-progress')">
+                              <span class="checkbox-mark"></span>
+                              <span class="quest-item-info">
+                                <span class="quest-item-name">📚 영어 단어 50개 암기</span>
+                                <span class="quest-item-meta">
+                                  <span class="meta-tag">📁 영어 공부</span>
+                                </span>
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span class="form-hint">💡 선택한 퀘스트들을 이 과제와 연결합니다</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 친구 관리 ==================== -->
+      <section id="friends" class="tab-content">
+        <div class="content-header">
+          <div>
+            <h2>👥 친구 관리</h2>
+            <p class="content-description">친구를 추가하고 함께 퀘스트를 진행하세요</p>
+          </div>
+          <button class="btn-primary" onclick="addFriend()">+ 친구 추가</button>
+        </div>
+
+        <!-- 친구 목록 -->
+        <div class="friends-grid">
+          <div class="friend-card">
+            <div class="friend-avatar">👨</div>
+            <div class="friend-info">
+              <h4>김철수</h4>
+              <p class="friend-email">kimcs@example.com</p>
+              <span class="friend-status online">온라인</span>
+            </div>
+            <div class="friend-actions">
+              <button class="btn-secondary" onclick="viewFriendProfile(1)">프로필</button>
+              <button class="btn-secondary delete" onclick="removeFriend(1)">삭제</button>
+            </div>
+          </div>
+
+          <div class="friend-card">
+            <div class="friend-avatar">👩</div>
+            <div class="friend-info">
+              <h4>이영희</h4>
+              <p class="friend-email">leeyh@example.com</p>
+              <span class="friend-status offline">오프라인</span>
+            </div>
+            <div class="friend-actions">
+              <button class="btn-secondary" onclick="viewFriendProfile(2)">프로필</button>
+              <button class="btn-secondary delete" onclick="removeFriend(2)">삭제</button>
+            </div>
+          </div>
+
+          <div class="friend-card">
+            <div class="friend-avatar">👦</div>
+            <div class="friend-info">
+              <h4>박민수</h4>
+              <p class="friend-email">parkms@example.com</p>
+              <span class="friend-status online">온라인</span>
+            </div>
+            <div class="friend-actions">
+              <button class="btn-secondary" onclick="viewFriendProfile(3)">프로필</button>
+              <button class="btn-secondary delete" onclick="removeFriend(3)">삭제</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 프로필 변경 ==================== -->
+      <section id="profile" class="tab-content">
+        <div class="content-header">
+          <div>
+            <h2>⚙️ 프로필 변경</h2>
+            <p class="content-description">개인 정보를 수정하고 설정을 변경하세요</p>
+          </div>
+        </div>
+
+        <!-- 프로필 편집 폼 -->
+        <div class="profile-edit-container">
+          <div class="profile-section">
+            <h3>기본 정보</h3>
+            <div class="profile-avatar-edit">
+              <div class="profile-avatar-big">👤</div>
+              <button class="btn-secondary">아바타 변경</button>
+            </div>
+
+            <div class="form-group">
+              <label>닉네임</label>
+              <input type="text" class="form-input" value="홍길동" placeholder="닉네임을 입력하세요">
+            </div>
+
+            <div class="form-group">
+              <label>이메일</label>
+              <input type="email" class="form-input" value="user@example.com" placeholder="이메일을 입력하세요">
+            </div>
+
+            <div class="form-group">
+              <label>자기소개</label>
+              <textarea class="form-textarea" rows="4" placeholder="자기소개를 입력하세요">2025년에는 건강한 몸과 마음을 만들기 위해 노력하고 있습니다!</textarea>
+            </div>
+          </div>
+
+          <div class="profile-section">
+            <h3>비밀번호 변경</h3>
+            <div class="form-group">
+              <label>현재 비밀번호</label>
+              <input type="password" class="form-input" placeholder="현재 비밀번호">
+            </div>
+
+            <div class="form-group">
+              <label>새 비밀번호</label>
+              <input type="password" class="form-input" placeholder="새 비밀번호">
+            </div>
+
+            <div class="form-group">
+              <label>새 비밀번호 확인</label>
+              <input type="password" class="form-input" placeholder="새 비밀번호 확인">
+            </div>
+          </div>
+
+          <div class="profile-section">
+            <h3>알림 설정</h3>
+            <div class="setting-item">
+              <div>
+                <h4>퀘스트 알림</h4>
+                <p>예정된 퀘스트 시작 시 알림을 받습니다</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-item">
+              <div>
+                <h4>이메일 알림</h4>
+                <p>중요한 이벤트를 이메일로 받습니다</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-item">
+              <div>
+                <h4>친구 요청 알림</h4>
+                <p>친구 요청이 왔을 때 알림을 받습니다</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <button class="btn-primary" onclick="saveProfile()">변경사항 저장</button>
+            <button class="btn-secondary" onclick="cancelEdit()">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 퀘스트 수정 페이지 ==================== -->
+      <section id="quest-edit" class="tab-content">
+        <div class="create-page-header">
+          <div class="header-left">
+            <button class="btn-back" onclick="closeQuestEditPage()">
+              <span>←</span> 돌아가기
+            </button>
+            <h2>⚡ 퀘스트 수정</h2>
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="closeQuestEditPage()">취소</button>
+            <button class="btn-primary" onclick="updateQuest()">
+              <span>✨</span> 수정하기
+            </button>
+          </div>
+        </div>
+
+        <div class="process-create-container">
+          <!-- 기본 정보 -->
+          <div class="form-section">
+            <h3 class="section-title">📝 기본 정보</h3>
+            
+            <div class="form-group">
+              <label class="form-label">퀘스트 이름 <span class="required">*</span></label>
+              <input type="text" class="form-input" id="edit-quest-name" placeholder="예: 아침 30분 조깅" maxlength="50">
+              <span class="form-hint">최대 50자</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">퀘스트 이모지 <span class="required">*</span></label>
+              <div class="emoji-selector">
+                <div class="selected-emoji" id="edit-selected-emoji" onclick="toggleEditEmojiPicker()">
+                  <span class="emoji-display" id="edit-emoji-display">🎯</span>
+                  <span class="emoji-change-text">변경하기</span>
+                </div>
+                <div class="emoji-picker" id="edit-emoji-picker" style="display: none;">
+                  <div class="emoji-picker-header">
+                    <span>이모지 선택</span>
+                    <button class="emoji-close" onclick="closeEditEmojiPicker()">✕</button>
+                  </div>
+                  
+                  <!-- 검색창 맨 위 고정 -->
+                  <div class="emoji-search-fixed">
+                    <input type="text" class="emoji-search-input" id="edit-emoji-search" placeholder="🔍 검색어 입력 (예: 운동, 공부)" oninput="searchEditEmoji(this.value)">
+                  </div>
+                  
+                  <!-- 카테고리 탭 -->
+                  <div class="emoji-tabs">
+                    <button class="emoji-tab active" data-category="all" onclick="filterEditEmojiCategory('all')">전체</button>
+                    <button class="emoji-tab" data-category="exercise" onclick="filterEditEmojiCategory('exercise')">💪 운동</button>
+                    <button class="emoji-tab" data-category="study" onclick="filterEditEmojiCategory('study')">📚 공부</button>
+                    <button class="emoji-tab" data-category="work" onclick="filterEditEmojiCategory('work')">💼 업무</button>
+                    <button class="emoji-tab" data-category="food" onclick="filterEditEmojiCategory('food')">🍎 음식</button>
+                    <button class="emoji-tab" data-category="hobby" onclick="filterEditEmojiCategory('hobby')">🎮 취미</button>
+                    <button class="emoji-tab" data-category="life" onclick="filterEditEmojiCategory('life')">🏠 생활</button>
+                    <button class="emoji-tab" data-category="motivation" onclick="filterEditEmojiCategory('motivation')">🔥 동기</button>
+                  </div>
+                  
+                  <!-- 스크롤 가능한 이모지 그리드 -->
+                  <div class="emoji-grid-container">
+                    <div class="emoji-grid" id="edit-emoji-grid">
+                    <!-- 운동/건강 -->
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 달리기 조깅 러닝 건강 체력" onclick="selectEditEmoji('🏃')">🏃</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 근력 헬스 근육 건강 힘" onclick="selectEditEmoji('💪')">💪</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 요가 명상 스트레칭 건강" onclick="selectEditEmoji('🧘')">🧘</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 헬스 근력 웨이트 건강" onclick="selectEditEmoji('🏋️')">🏋️</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 자전거 사이클 건강 라이딩" onclick="selectEditEmoji('🚴')">🚴</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 수영 건강 체력" onclick="selectEditEmoji('🏊')">🏊</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 복싱 건강 체력" onclick="selectEditEmoji('🥊')">🥊</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 테니스 건강 체력" onclick="selectEditEmoji('🎾')">🎾</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 농구 건강 체력" onclick="selectEditEmoji('🏀')">🏀</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 축구 건강 체력" onclick="selectEditEmoji('⚽')">⚽</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 야구 건강 체력" onclick="selectEditEmoji('⚾')">⚾</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="운동 등산 건강 체력" onclick="selectEditEmoji('⛰️')">⛰️</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="건강 심장 건강검진" onclick="selectEditEmoji('❤️')">❤️</button>
+                    <button class="emoji-option" data-category="exercise" data-keywords="건강 체중 스케일" onclick="selectEditEmoji('⚖️')">⚖️</button>
+                    
+                    <!-- 공부/독서 -->
+                    <button class="emoji-option" data-category="study" data-keywords="공부 독서 책 학습 교육 지식" onclick="selectEditEmoji('📚')">📚</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 작성 쓰기 글쓰기 노트 학습" onclick="selectEditEmoji('✍️')">✍️</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 메모 노트 필기 작성 학습" onclick="selectEditEmoji('📝')">📝</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 학교 교육 학습 졸업 학위" onclick="selectEditEmoji('🎓')">🎓</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 독서 책 읽기 학습" onclick="selectEditEmoji('📖')">📖</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 코딩 프로그래밍 개발 컴퓨터 학습" onclick="selectEditEmoji('💻')">💻</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 연필 필기 작성" onclick="selectEditEmoji('✏️')">✏️</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 노트북 공책 필기" onclick="selectEditEmoji('📓')">📓</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 시험 테스트 학습" onclick="selectEditEmoji('📄')">📄</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 과학 실험 연구" onclick="selectEditEmoji('🔬')">🔬</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 수학 계산 학습" onclick="selectEditEmoji('🔢')">🔢</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 언어 영어 학습" onclick="selectEditEmoji('🔤')">🔤</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 전구 아이디어 생각" onclick="selectEditEmoji('💡')">💡</button>
+                    <button class="emoji-option" data-category="study" data-keywords="공부 뇌 생각 지식" onclick="selectEditEmoji('🧠')">🧠</button>
+                    
+                    <!-- 업무/생산성 -->
+                    <button class="emoji-option" data-category="work" data-keywords="업무 일 회사 비즈니스 직장" onclick="selectEditEmoji('💼')">💼</button>
+                    <button class="emoji-option" data-category="work" data-keywords="업무 차트 분석 데이터 통계" onclick="selectEditEmoji('📊')">📊</button>
+                    <button class="emoji-option" data-category="work" data-keywords="업무 성장 발전 상승 성과" onclick="selectEditEmoji('📈')">📈</button>
+                    <button class="emoji-option" data-category="work" data-keywords="시간 알람 일정 스케줄 관리" onclick="selectEditEmoji('⏰')">⏰</button>
+                    <button class="emoji-option" data-category="work" data-keywords="완료 체크 확인 성공 달성" onclick="selectEditEmoji('✅')">✅</button>
+                    <button class="emoji-option" data-category="work" data-keywords="목표 타겟 달성 성공 집중" onclick="selectEditEmoji('🎯')">🎯</button>
+                    <button class="emoji-option" data-category="work" data-keywords="업무 이메일 메일" onclick="selectEditEmoji('📧')">📧</button>
+                    <button class="emoji-option" data-category="work" data-keywords="업무 전화 통화" onclick="selectEditEmoji('📞')">📞</button>
+                    <button class="emoji-option" data-category="work" data-keywords="업무 회의 미팅" onclick="selectEditEmoji('🤝')">🤝</button>
+                    <button class="emoji-option" data-category="work" data-keywords="업무 프레젠테이션 발표" onclick="selectEditEmoji('📽️')">📽️</button>
+                    <button class="emoji-option" data-category="work" data-keywords="업무 문서 서류" onclick="selectEditEmoji('📋')">📋</button>
+                    <button class="emoji-option" data-category="work" data-keywords="업무 돈 재무 월급" onclick="selectEditEmoji('💰')">💰</button>
+                    
+                    <!-- 음식/요리 -->
+                    <button class="emoji-option" data-category="food" data-keywords="음식 요리 식사 아침 계란" onclick="selectEditEmoji('🍳')">🍳</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 샐러드 야채 건강 다이어트" onclick="selectEditEmoji('🥗')">🥗</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 과일 사과 건강 다이어트" onclick="selectEditEmoji('🍎')">🍎</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 커피 음료 카페 휴식" onclick="selectEditEmoji('☕')">☕</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 도시락 식사 점심" onclick="selectEditEmoji('🍱')">🍱</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 음료 주스 물 수분" onclick="selectEditEmoji('🥤')">🥤</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 빵 토스트 아침" onclick="selectEditEmoji('🍞')">🍞</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 과일 바나나 건강" onclick="selectEditEmoji('🍌')">🍌</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 우유 유제품 칼슘" onclick="selectEditEmoji('🥛')">🥛</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 햄버거 패스트푸드" onclick="selectEditEmoji('🍔')">🍔</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 피자 치즈" onclick="selectEditEmoji('🍕')">🍕</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 국수 라면 면" onclick="selectEditEmoji('🍜')">🍜</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 밥 쌀 한식" onclick="selectEditEmoji('🍚')">🍚</button>
+                    <button class="emoji-option" data-category="food" data-keywords="음식 김밥 한식" onclick="selectEditEmoji('🍙')">🍙</button>
+                    
+                    <!-- 취미/여가 -->
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 게임 오락 여가 휴식" onclick="selectEditEmoji('🎮')">🎮</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 그림 미술 예술 창작" onclick="selectEditEmoji('🎨')">🎨</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 음악 노래 듣기 연주" onclick="selectEditEmoji('🎵')">🎵</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 영화 드라마 시청 보기" onclick="selectEditEmoji('🎬')">🎬</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 사진 촬영 카메라" onclick="selectEditEmoji('📷')">📷</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 여행 휴가 관광" onclick="selectEditEmoji('✈️')">✈️</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 쇼핑 구매" onclick="selectEditEmoji('🛍️')">🛍️</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 낚시 여가" onclick="selectEditEmoji('🎣')">🎣</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 기타 악기 연주" onclick="selectEditEmoji('🎸')">🎸</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 노래방 노래" onclick="selectEditEmoji('🎤')">🎤</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 춤 댄스" onclick="selectEditEmoji('💃')">💃</button>
+                    <button class="emoji-option" data-category="hobby" data-keywords="취미 파티 모임" onclick="selectEditEmoji('🎉')">🎉</button>
+                    
+                    <!-- 생활/습관 -->
+                    <button class="emoji-option" data-category="life" data-keywords="생활 수면 잠 휴식 침대" onclick="selectEditEmoji('🛏️')">🛏️</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 청소 정리 집안일" onclick="selectEditEmoji('🧹')">🧹</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 샤워 씻기 목욕 위생" onclick="selectEditEmoji('🚿')">🚿</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 약 건강 영양제 복용" onclick="selectEditEmoji('💊')">💊</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 물 수분 마시기 건강" onclick="selectEditEmoji('💧')">💧</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 식물 화분 키우기 자연 성장" onclick="selectEditEmoji('🌱')">🌱</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 빨래 세탁 집안일" onclick="selectEditEmoji('👕')">👕</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 설거지 집안일" onclick="selectEditEmoji('🍽️')">🍽️</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 쓰레기 분리수거" onclick="selectEditEmoji('🗑️')">🗑️</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 반려동물 강아지 고양이" onclick="selectEditEmoji('🐕')">🐕</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 자동차 운전 주차" onclick="selectEditEmoji('🚗')">🚗</button>
+                    <button class="emoji-option" data-category="life" data-keywords="생활 집 가정 홈" onclick="selectEditEmoji('🏠')">🏠</button>
+                    
+                    <!-- 감정/동기부여 -->
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 열정 불타는 화이팅 힘" onclick="selectEditEmoji('🔥')">🔥</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 별 목표 성공 특별" onclick="selectEditEmoji('⭐')">⭐</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 다이아 보석 가치 특별" onclick="selectEditEmoji('💎')">💎</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 트로피 우승 성공 달성 1등" onclick="selectEditEmoji('🏆')">🏆</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 반짝 빛나는 특별 성공" onclick="selectEditEmoji('✨')">✨</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 반짝 빛 특별" onclick="selectEditEmoji('💫')">💫</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 왕관 1등 성공" onclick="selectEditEmoji('👑')">👑</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 로켓 성장 발전" onclick="selectEditEmoji('🚀')">🚀</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 무지개 희망 꿈" onclick="selectEditEmoji('🌈')">🌈</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 태양 밝은 긍정" onclick="selectEditEmoji('☀️')">☀️</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 달 밤 수면" onclick="selectEditEmoji('🌙')">🌙</button>
+                    <button class="emoji-option" data-category="motivation" data-keywords="동기 하트 사랑 행복" onclick="selectEditEmoji('💖')">💖</button>
+                  </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <span class="form-hint">달력에서 퀘스트를 구분할 이모지를 선택하세요</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">설명</label>
+              <textarea class="form-textarea" id="edit-quest-desc" rows="3" placeholder="퀘스트에 대한 간단한 설명을 입력하세요" maxlength="200"></textarea>
+              <span class="form-hint">최대 200자</span>
+            </div>
+          </div>
+
+          <!-- 과제 연결 -->
+          <div class="form-section">
+            <h3 class="section-title">📋 과제 연결</h3>
+            
+            <div class="form-group">
+              <label class="form-label">과제 선택 (중복 가능)</label>
+              
+              <!-- 선택된 과제 태그 -->
+              <div class="selected-processes" id="edit-selected-processes">
+                <span class="process-tag no-process active" data-process="">
+                  <span class="tag-icon">📌</span>
+                  <span class="tag-text">독립 퀘스트</span>
+                  <button class="tag-remove" onclick="removeEditProcessTag(event, '')">×</button>
+                </span>
+              </div>
+              
+              <!-- 과제 선택 영역 -->
+              <div class="process-selector">
+                <button type="button" class="process-selector-toggle" onclick="toggleEditProcessSelector()">
+                  <span>과제 추가하기</span>
+                  <span class="toggle-icon">▼</span>
+                </button>
+                
+                <div class="process-selector-dropdown" id="edit-process-dropdown" style="display: none;">
+                  <!-- 독립 퀘스트 -->
+                  <div class="process-option no-process-option">
+                    <label class="process-checkbox">
+                      <input type="checkbox" value="" checked onchange="toggleEditProcess(event, '', '독립 퀘스트', 'no-process')">
+                      <span class="checkbox-mark"></span>
+                      <span class="process-info">
+                        <span class="process-icon">📌</span>
+                        <span class="process-name">독립 퀘스트 (과제 없음)</span>
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div class="process-divider"></div>
+                  
+                  <!-- 프로젝트별 과제 그룹 -->
+                  <div class="process-group" data-project="diet">
+                    <div class="process-group-header">
+                      <span class="project-badge" style="background: linear-gradient(135deg, #ef4444, #dc2626);">💪</span>
+                      <span class="project-name">10kg 다이어트</span>
+                    </div>
+                    <div class="process-list">
+                      <label class="process-checkbox">
+                        <input type="checkbox" value="1" onchange="toggleEditProcess(event, '1', '[10kg 다이어트] 운동하기', 'diet')">
+                        <span class="checkbox-mark"></span>
+                        <span class="process-info">
+                          <span class="process-name">운동하기</span>
+                        </span>
+                      </label>
+                      <label class="process-checkbox">
+                        <input type="checkbox" value="2" onchange="toggleEditProcess(event, '2', '[10kg 다이어트] 식단 관리', 'diet')">
+                        <span class="checkbox-mark"></span>
+                        <span class="process-info">
+                          <span class="process-name">식단 관리</span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div class="process-group" data-project="grad">
+                    <div class="process-group-header">
+                      <span class="project-badge" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">🎓</span>
+                      <span class="project-name">대학원 진학 준비</span>
+                    </div>
+                    <div class="process-list">
+                      <label class="process-checkbox">
+                        <input type="checkbox" value="3" onchange="toggleEditProcess(event, '3', '[대학원 진학 준비] 서류 준비', 'grad')">
+                        <span class="checkbox-mark"></span>
+                        <span class="process-info">
+                          <span class="process-name">서류 준비</span>
+                        </span>
+                      </label>
+                      <label class="process-checkbox">
+                        <input type="checkbox" value="4" onchange="toggleEditProcess(event, '4', '[대학원 진학 준비] 면접 준비', 'grad')">
+                        <span class="checkbox-mark"></span>
+                        <span class="process-info">
+                          <span class="process-name">면접 준비</span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div class="process-group" data-project="english">
+                    <div class="process-group-header">
+                      <span class="project-badge" style="background: linear-gradient(135deg, #22c55e, #16a34a);">🌍</span>
+                      <span class="project-name">영어 공부</span>
+                    </div>
+                    <div class="process-list">
+                      <label class="process-checkbox">
+                        <input type="checkbox" value="5" onchange="toggleEditProcess(event, '5', '[영어 공부] 영어 단어 암기', 'english')">
+                        <span class="checkbox-mark"></span>
+                        <span class="process-info">
+                          <span class="process-name">영어 단어 암기</span>
+                        </span>
+                      </label>
+                      <label class="process-checkbox">
+                        <input type="checkbox" value="6" onchange="toggleEditProcess(event, '6', '[영어 공부] 회화 연습', 'english')">
+                        <span class="checkbox-mark"></span>
+                        <span class="process-info">
+                          <span class="process-name">회화 연습</span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <span class="form-hint">💡 하나의 퀘스트를 여러 과제에 동시에 연결할 수 있어요</span>
+            </div>
+          </div>
+
+          <!-- 상태 설정 -->
+          <div class="form-section">
+            <h3 class="section-title">📊 상태 설정</h3>
+            
+            <div class="form-group">
+              <label class="form-label">퀘스트 상태 <span class="required">*</span></label>
+              <select class="form-select" id="edit-quest-status">
+                <option value="pending">⚪ 진행전</option>
+                <option value="in-progress">🔥 진행중</option>
+                <option value="completed">✅ 완료</option>
+                <option value="paused">⏸️ 중단</option>
+              </select>
+              <span class="form-hint">현재 퀘스트의 상태를 선택하세요</span>
+            </div>
+          </div>
+
+          <!-- 퀘스트 정보 (읽기 전용) -->
+          <div class="form-section">
+            <div class="warning-banner">
+              <span class="warning-icon">🔒</span>
+              <div class="warning-content">
+                <strong>변경 불가 정보</strong>
+                <p>아래 정보는 퀘스트 생성 시 설정되어 수정할 수 없습니다</p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">퀘스트 타입</label>
+              <input type="text" class="form-input" id="edit-quest-type-display" readonly style="background-color: #f3f4f6;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">반복 주기</label>
+              <input type="text" class="form-input" id="edit-quest-cycle-display" readonly style="background-color: #f3f4f6;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">입력 방법</label>
+              <input type="text" class="form-input" id="edit-quest-input-method-display" readonly style="background-color: #f3f4f6;">
+            </div>
+          </div>
+
+          <!-- 날짜 설정 -->
+          <div class="form-section">
+            <h3 class="section-title">📅 날짜 설정</h3>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">시작 날짜</label>
+                <input type="date" class="form-input" id="edit-start-date">
+                <span class="form-hint">비워두면 오늘부터 시작</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">종료 날짜</label>
+                <input type="date" class="form-input" id="edit-end-date">
+                <span class="form-hint">비워두면 무기한</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 시간 설정 -->
+          <div class="form-section">
+            <h3 class="section-title">⏰ 시간 설정</h3>
+            
+            <div class="form-group">
+              <label class="form-label">알림 시간</label>
+              <input type="time" class="form-input" id="edit-quest-time">
+              <span class="form-hint">설정한 시간에 알림을 받습니다 (선택사항)</span>
+            </div>
+          </div>
+        </div>
+
+
+      </section>
+
+
+
+      <!-- ==================== 퀘스트 만들기 페이지 ==================== -->
+      <section id="quest-create" class="tab-content">
+        <div class="create-page-header">
+          <div class="header-left">
+            <button class="btn-back" onclick="closeQuestCreatePage()">
+              <span>←</span> 돌아가기
+            </button>
+            <h2>⚡ 퀘스트 만들기</h2>
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="closeQuestCreatePage()">취소</button>
+            <button class="btn-primary" onclick="saveQuest()">
+              <span>✨</span> 저장하기
+            </button>
+          </div>
+        </div>
+
+        <div class="create-page-content">
+          <!-- 상단: 기본 정보 + 과제 선택 -->
+          <div class="create-top-section">
+            <!-- 왼쪽: 기본 정보 -->
+            <div class="basic-info-panel">
+              <div class="form-section">
+                <h3 class="section-title">📝 기본 정보</h3>
+              
+              <div class="form-group">
+                <label class="form-label">퀘스트 이름 <span class="required">*</span></label>
+                <input type="text" class="form-input" id="quest-name" placeholder="예: 아침 30분 조깅" maxlength="50">
+                <span class="form-hint">최대 50자</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">퀘스트 이모지 <span class="required">*</span></label>
+                <div class="emoji-selector">
+                  <div class="selected-emoji" id="selected-emoji" onclick="toggleEmojiPicker()">
+                    <span class="emoji-display" id="emoji-display">🎯</span>
+                    <span class="emoji-change-text">변경하기</span>
+                  </div>
+                  <div class="emoji-picker" id="emoji-picker" style="display: none;">
+                    <div class="emoji-picker-header">
+                      <span>이모지 선택</span>
+                      <button class="emoji-close" onclick="closeEmojiPicker()">✕</button>
+                    </div>
+                    
+                    <!-- 검색창 맨 위 고정 -->
+                    <div class="emoji-search-fixed">
+                      <input type="text" class="emoji-search-input" id="emoji-search" placeholder="🔍 검색어 입력 (예: 운동, 공부)" oninput="searchEmoji(this.value)">
+                    </div>
+                    
+                    <!-- 카테고리 탭 -->
+                    <div class="emoji-tabs">
+                      <button class="emoji-tab active" data-category="all" onclick="filterEmojiCategory('all')">전체</button>
+                      <button class="emoji-tab" data-category="exercise" onclick="filterEmojiCategory('exercise')">💪 운동</button>
+                      <button class="emoji-tab" data-category="study" onclick="filterEmojiCategory('study')">📚 공부</button>
+                      <button class="emoji-tab" data-category="work" onclick="filterEmojiCategory('work')">💼 업무</button>
+                      <button class="emoji-tab" data-category="food" onclick="filterEmojiCategory('food')">🍎 음식</button>
+                      <button class="emoji-tab" data-category="hobby" onclick="filterEmojiCategory('hobby')">🎮 취미</button>
+                      <button class="emoji-tab" data-category="life" onclick="filterEmojiCategory('life')">🏠 생활</button>
+                      <button class="emoji-tab" data-category="motivation" onclick="filterEmojiCategory('motivation')">🔥 동기</button>
+                    </div>
+                    
+                    <!-- 스크롤 가능한 이모지 그리드 -->
+                    <div class="emoji-grid-container">
+                      <div class="emoji-grid" id="emoji-grid">
+                      <!-- 운동/건강 -->
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 달리기 조깅 러닝 건강 체력" onclick="selectEmoji('🏃')">🏃</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 근력 헬스 근육 건강 힘" onclick="selectEmoji('💪')">💪</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 요가 명상 스트레칭 건강" onclick="selectEmoji('🧘')">🧘</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 헬스 근력 웨이트 건강" onclick="selectEmoji('🏋️')">🏋️</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 자전거 사이클 건강 라이딩" onclick="selectEmoji('🚴')">🚴</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 수영 건강 체력" onclick="selectEmoji('🏊')">🏊</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 복싱 건강 체력" onclick="selectEmoji('🥊')">🥊</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 테니스 건강 체력" onclick="selectEmoji('🎾')">🎾</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 농구 건강 체력" onclick="selectEmoji('🏀')">🏀</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 축구 건강 체력" onclick="selectEmoji('⚽')">⚽</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 야구 건강 체력" onclick="selectEmoji('⚾')">⚾</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="운동 등산 건강 체력" onclick="selectEmoji('⛰️')">⛰️</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="건강 심장 건강검진" onclick="selectEmoji('❤️')">❤️</button>
+                      <button class="emoji-option" data-category="exercise" data-keywords="건강 체중 스케일" onclick="selectEmoji('⚖️')">⚖️</button>
+                      
+                      <!-- 공부/독서 -->
+                      <button class="emoji-option" data-category="study" data-keywords="공부 독서 책 학습 교육 지식" onclick="selectEmoji('📚')">📚</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 작성 쓰기 글쓰기 노트 학습" onclick="selectEmoji('✍️')">✍️</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 메모 노트 필기 작성 학습" onclick="selectEmoji('📝')">📝</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 학교 교육 학습 졸업 학위" onclick="selectEmoji('🎓')">🎓</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 독서 책 읽기 학습" onclick="selectEmoji('📖')">📖</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 코딩 프로그래밍 개발 컴퓨터 학습" onclick="selectEmoji('💻')">💻</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 연필 필기 작성" onclick="selectEmoji('✏️')">✏️</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 노트북 공책 필기" onclick="selectEmoji('📓')">📓</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 시험 테스트 학습" onclick="selectEmoji('📄')">📄</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 과학 실험 연구" onclick="selectEmoji('🔬')">🔬</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 수학 계산 학습" onclick="selectEmoji('🔢')">🔢</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 언어 영어 학습" onclick="selectEmoji('🔤')">🔤</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 전구 아이디어 생각" onclick="selectEmoji('💡')">💡</button>
+                      <button class="emoji-option" data-category="study" data-keywords="공부 뇌 생각 지식" onclick="selectEmoji('🧠')">🧠</button>
+                      
+                      <!-- 업무/생산성 -->
+                      <button class="emoji-option" data-category="work" data-keywords="업무 일 회사 비즈니스 직장" onclick="selectEmoji('💼')">💼</button>
+                      <button class="emoji-option" data-category="work" data-keywords="업무 차트 분석 데이터 통계" onclick="selectEmoji('📊')">📊</button>
+                      <button class="emoji-option" data-category="work" data-keywords="업무 성장 발전 상승 성과" onclick="selectEmoji('📈')">📈</button>
+                      <button class="emoji-option" data-category="work" data-keywords="시간 알람 일정 스케줄 관리" onclick="selectEmoji('⏰')">⏰</button>
+                      <button class="emoji-option" data-category="work" data-keywords="완료 체크 확인 성공 달성" onclick="selectEmoji('✅')">✅</button>
+                      <button class="emoji-option" data-category="work" data-keywords="목표 타겟 달성 성공 집중" onclick="selectEmoji('🎯')">🎯</button>
+                      <button class="emoji-option" data-category="work" data-keywords="업무 이메일 메일" onclick="selectEmoji('📧')">📧</button>
+                      <button class="emoji-option" data-category="work" data-keywords="업무 전화 통화" onclick="selectEmoji('📞')">📞</button>
+                      <button class="emoji-option" data-category="work" data-keywords="업무 회의 미팅" onclick="selectEmoji('🤝')">🤝</button>
+                      <button class="emoji-option" data-category="work" data-keywords="업무 프레젠테이션 발표" onclick="selectEmoji('📽️')">📽️</button>
+                      <button class="emoji-option" data-category="work" data-keywords="업무 문서 서류" onclick="selectEmoji('📋')">📋</button>
+                      <button class="emoji-option" data-category="work" data-keywords="업무 돈 재무 월급" onclick="selectEmoji('💰')">💰</button>
+                      
+                      <!-- 음식/요리 -->
+                      <button class="emoji-option" data-category="food" data-keywords="음식 요리 식사 아침 계란" onclick="selectEmoji('🍳')">🍳</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 샐러드 야채 건강 다이어트" onclick="selectEmoji('🥗')">🥗</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 과일 사과 건강 다이어트" onclick="selectEmoji('🍎')">🍎</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 커피 음료 카페 휴식" onclick="selectEmoji('☕')">☕</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 도시락 식사 점심" onclick="selectEmoji('🍱')">🍱</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 음료 주스 물 수분" onclick="selectEmoji('🥤')">🥤</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 빵 토스트 아침" onclick="selectEmoji('🍞')">🍞</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 과일 바나나 건강" onclick="selectEmoji('🍌')">🍌</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 우유 유제품 칼슘" onclick="selectEmoji('🥛')">🥛</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 햄버거 패스트푸드" onclick="selectEmoji('🍔')">🍔</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 피자 치즈" onclick="selectEmoji('🍕')">🍕</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 국수 라면 면" onclick="selectEmoji('🍜')">🍜</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 밥 쌀 한식" onclick="selectEmoji('🍚')">🍚</button>
+                      <button class="emoji-option" data-category="food" data-keywords="음식 김밥 한식" onclick="selectEmoji('🍙')">🍙</button>
+                      
+                      <!-- 취미/여가 -->
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 게임 오락 여가 휴식" onclick="selectEmoji('🎮')">🎮</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 그림 미술 예술 창작" onclick="selectEmoji('🎨')">🎨</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 음악 노래 듣기 연주" onclick="selectEmoji('🎵')">🎵</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 영화 드라마 시청 보기" onclick="selectEmoji('🎬')">🎬</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 사진 촬영 카메라" onclick="selectEmoji('📷')">📷</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 여행 휴가 관광" onclick="selectEmoji('✈️')">✈️</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 쇼핑 구매" onclick="selectEmoji('🛍️')">🛍️</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 낚시 여가" onclick="selectEmoji('🎣')">🎣</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 기타 악기 연주" onclick="selectEmoji('🎸')">🎸</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 노래방 노래" onclick="selectEmoji('🎤')">🎤</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 춤 댄스" onclick="selectEmoji('💃')">💃</button>
+                      <button class="emoji-option" data-category="hobby" data-keywords="취미 파티 모임" onclick="selectEmoji('🎉')">🎉</button>
+                      
+                      <!-- 생활/습관 -->
+                      <button class="emoji-option" data-category="life" data-keywords="생활 수면 잠 휴식 침대" onclick="selectEmoji('🛏️')">🛏️</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 청소 정리 집안일" onclick="selectEmoji('🧹')">🧹</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 샤워 씻기 목욕 위생" onclick="selectEmoji('🚿')">🚿</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 약 건강 영양제 복용" onclick="selectEmoji('💊')">💊</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 물 수분 마시기 건강" onclick="selectEmoji('💧')">💧</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 식물 화분 키우기 자연 성장" onclick="selectEmoji('🌱')">🌱</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 빨래 세탁 집안일" onclick="selectEmoji('👕')">👕</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 설거지 집안일" onclick="selectEmoji('🍽️')">🍽️</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 쓰레기 분리수거" onclick="selectEmoji('🗑️')">🗑️</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 반려동물 강아지 고양이" onclick="selectEmoji('🐕')">🐕</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 자동차 운전 주차" onclick="selectEmoji('🚗')">🚗</button>
+                      <button class="emoji-option" data-category="life" data-keywords="생활 집 가정 홈" onclick="selectEmoji('🏠')">🏠</button>
+                      
+                      <!-- 감정/동기부여 -->
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 열정 불타는 화이팅 힘" onclick="selectEmoji('🔥')">🔥</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 별 목표 성공 특별" onclick="selectEmoji('⭐')">⭐</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 다이아 보석 가치 특별" onclick="selectEmoji('💎')">💎</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 트로피 우승 성공 달성 1등" onclick="selectEmoji('🏆')">🏆</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 반짝 빛나는 특별 성공" onclick="selectEmoji('✨')">✨</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 반짝 빛 특별" onclick="selectEmoji('💫')">💫</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 왕관 1등 성공" onclick="selectEmoji('👑')">👑</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 로켓 성장 발전" onclick="selectEmoji('🚀')">🚀</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 무지개 희망 꿈" onclick="selectEmoji('🌈')">🌈</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 태양 밝은 긍정" onclick="selectEmoji('☀️')">☀️</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 달 밤 수면" onclick="selectEmoji('🌙')">🌙</button>
+                      <button class="emoji-option" data-category="motivation" data-keywords="동기 하트 사랑 행복" onclick="selectEmoji('💖')">💖</button>
+                    </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <span class="form-hint">달력에서 퀘스트를 구분할 이모지를 선택하세요</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">설명</label>
+                <textarea class="form-textarea" id="quest-desc" rows="3" placeholder="퀘스트에 대한 간단한 설명을 입력하세요" maxlength="200"></textarea>
+                <span class="form-hint">최대 200자</span>
+              </div>
+              </div>
+            </div>
+
+            <!-- 오른쪽: 과제 선택 -->
+            <div class="task-select-panel">
+              <div class="form-section">
+                <h3 class="section-title">📋 과제 연결</h3>
+              
+              <div class="form-group">
+                <label class="form-label">과제 선택 (중복 가능)</label>
+                
+                <!-- 선택된 과제 태그 -->
+                <div class="selected-processes" id="selected-processes">
+                  <span class="process-tag no-process active" data-process="">
+                    <span class="tag-icon">📌</span>
+                    <span class="tag-text">독립 퀘스트</span>
+                    <button class="tag-remove" onclick="removeProcessTag(event, '')">×</button>
+                  </span>
+                </div>
+                
+                <!-- 과제 선택 영역 -->
+                <div class="process-selector">
+                  <button type="button" class="process-selector-toggle" onclick="toggleProcessSelector()">
+                    <span>과제 추가하기</span>
+                    <span class="toggle-icon">▼</span>
+                  </button>
+                  
+                  <div class="process-selector-dropdown" id="process-dropdown" style="display: none;">
+                    <!-- 독립 퀘스트 -->
+                    <div class="process-option no-process-option">
+                      <label class="process-checkbox">
+                        <input type="checkbox" value="" checked onchange="toggleProcess(event, '', '독립 퀘스트', 'no-process')">
+                        <span class="checkbox-mark"></span>
+                        <span class="process-info">
+                          <span class="process-icon">📌</span>
+                          <span class="process-name">독립 퀘스트 (과제 없음)</span>
+                        </span>
+                      </label>
+                    </div>
+                    
+                    <div class="process-divider"></div>
+                    
+                    <!-- 프로젝트별 과제 그룹 -->
+                    <div class="process-group" data-project="diet">
+                      <div class="process-group-header">
+                        <span class="project-badge" style="background: linear-gradient(135deg, #ef4444, #dc2626);">💪</span>
+                        <span class="project-name">10kg 다이어트</span>
+                      </div>
+                      <div class="process-list">
+                        <label class="process-checkbox">
+                          <input type="checkbox" value="1" onchange="toggleProcess(event, '1', '[10kg 다이어트] 운동하기', 'diet')">
+                          <span class="checkbox-mark"></span>
+                          <span class="process-info">
+                            <span class="process-name">운동하기</span>
+                          </span>
+                        </label>
+                        <label class="process-checkbox">
+                          <input type="checkbox" value="2" onchange="toggleProcess(event, '2', '[10kg 다이어트] 식단 관리', 'diet')">
+                          <span class="checkbox-mark"></span>
+                          <span class="process-info">
+                            <span class="process-name">식단 관리</span>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="process-group" data-project="grad">
+                      <div class="process-group-header">
+                        <span class="project-badge" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">🎓</span>
+                        <span class="project-name">대학원 진학 준비</span>
+                      </div>
+                      <div class="process-list">
+                        <label class="process-checkbox">
+                          <input type="checkbox" value="3" onchange="toggleProcess(event, '3', '[대학원 진학 준비] 서류 준비', 'grad')">
+                          <span class="checkbox-mark"></span>
+                          <span class="process-info">
+                            <span class="process-name">서류 준비</span>
+                          </span>
+                        </label>
+                        <label class="process-checkbox">
+                          <input type="checkbox" value="4" onchange="toggleProcess(event, '4', '[대학원 진학 준비] 면접 준비', 'grad')">
+                          <span class="checkbox-mark"></span>
+                          <span class="process-info">
+                            <span class="process-name">면접 준비</span>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="process-group" data-project="english">
+                      <div class="process-group-header">
+                        <span class="project-badge" style="background: linear-gradient(135deg, #22c55e, #16a34a);">🌍</span>
+                        <span class="project-name">영어 공부</span>
+                      </div>
+                      <div class="process-list">
+                        <label class="process-checkbox">
+                          <input type="checkbox" value="5" onchange="toggleProcess(event, '5', '[영어 공부] 영어 단어 암기', 'english')">
+                          <span class="checkbox-mark"></span>
+                          <span class="process-info">
+                            <span class="process-name">영어 단어 암기</span>
+                          </span>
+                        </label>
+                        <label class="process-checkbox">
+                          <input type="checkbox" value="6" onchange="toggleProcess(event, '6', '[영어 공부] 회화 연습', 'english')">
+                          <span class="checkbox-mark"></span>
+                          <span class="process-info">
+                            <span class="process-name">회화 연습</span>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <span class="form-hint">💡 하나의 퀘스트를 여러 과제에 동시에 연결할 수 있어요</span>
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 하단: 퀘스트 설정 (전체 너비) -->
+          <div class="create-bottom-section">
+            <!-- 변경 불가 설정 영역 -->
+            <div class="immutable-settings">
+              <div class="warning-banner-large">
+                <div class="warning-header">
+                  <span class="warning-icon-large">🔒</span>
+                  <div>
+                    <strong>변경 불가 설정</strong>
+                    <p>퀘스트 생성 후에는 아래 설정을 변경할 수 없습니다!</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 퀘스트 타입 -->
+              <div class="form-section locked-section">
+                <h3 class="section-title">🎯 퀘스트 타입</h3>
+                <div class="quest-type-selector">
+                  <button class="quest-type-option active" data-type="simple">
+                    <div class="type-icon">✓</div>
+                    <div class="type-info">
+                      <h4>단순형</h4>
+                      <p>한 번만 수행하는 일회성 퀘스트</p>
+                    </div>
+                  </button>
+                  <button class="quest-type-option" data-type="repeat">
+                    <div class="type-icon">🔄</div>
+                    <div class="type-info">
+                      <h4>반복형</h4>
+                      <p>정기적으로 반복되는 퀘스트</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 입력 방법 -->
+              <div class="form-section locked-section">
+                <h3 class="section-title">✍️ 입력 방법</h3>
+
+                <div class="input-method-selector">
+                  <label class="input-method-option active" data-method="check">
+                    <input type="radio" name="input-method" value="check" checked>
+                    <div class="method-card">
+                      <div class="method-icon">✓</div>
+                      <div class="method-info">
+                        <h4>체크형</h4>
+                        <p>완료/미완료만 표시</p>
+                        <span class="method-example">예: 아침 운동 완료</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label class="input-method-option" data-method="status">
+                    <input type="radio" name="input-method" value="status">
+                    <div class="method-card">
+                      <div class="method-icon">🔄</div>
+                      <div class="method-info">
+                        <h4>상태형</h4>
+                        <p>커스텀 옵션 선택 (최대 10개)</p>
+                        <span class="method-example">예: 진행전/진행중/완료/취소</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label class="input-method-option" data-method="input">
+                    <input type="radio" name="input-method" value="input">
+                    <div class="method-card">
+                      <div class="method-icon">📝</div>
+                      <div class="method-info">
+                        <h4>입력형 (숫자)</h4>
+                        <p>숫자 값 직접 입력</p>
+                        <span class="method-example">예: 운동 30분, 물 2L</span>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <!-- 상태형 상세 설정 -->
+                <div class="status-detail-config" style="display: none;">
+                  <div class="form-group">
+                    <label class="form-label">상태 옵션 설정 <span style="color: var(--gray-500); font-size: 13px;">(최대 10개)</span></label>
+                    <p class="config-desc">사용자가 선택할 수 있는 상태 옵션을 추가하세요</p>
+                    
+                    <div id="status-options-list" class="status-options-list">
+                      <!-- 기본 옵션 -->
+                      <div class="status-option-item" data-index="0">
+                        <span class="option-number">1</span>
+                        <input type="text" class="status-option-input" value="진행전" placeholder="옵션 이름" maxlength="20">
+                        <input type="color" class="status-color-picker" value="#6b7280" title="색상 선택">
+                        <button class="btn-remove-option" onclick="removeStatusOption(0)">×</button>
+                      </div>
+                      <div class="status-option-item" data-index="1">
+                        <span class="option-number">2</span>
+                        <input type="text" class="status-option-input" value="진행중" placeholder="옵션 이름" maxlength="20">
+                        <input type="color" class="status-color-picker" value="#3b82f6" title="색상 선택">
+                        <button class="btn-remove-option" onclick="removeStatusOption(1)">×</button>
+                      </div>
+                      <div class="status-option-item" data-index="2">
+                        <span class="option-number">3</span>
+                        <input type="text" class="status-option-input" value="완료" placeholder="옵션 이름" maxlength="20">
+                        <input type="color" class="status-color-picker" value="#22c55e" title="색상 선택">
+                        <button class="btn-remove-option" onclick="removeStatusOption(2)">×</button>
+                      </div>
+                      <div class="status-option-item" data-index="3">
+                        <span class="option-number">4</span>
+                        <input type="text" class="status-option-input" value="취소" placeholder="옵션 이름" maxlength="20">
+                        <input type="color" class="status-color-picker" value="#ef4444" title="색상 선택">
+                        <button class="btn-remove-option" onclick="removeStatusOption(3)">×</button>
+                      </div>
+                    </div>
+                    
+                    <button class="btn-add-option" onclick="addStatusOption()">
+                      <span>+</span> 옵션 추가
+                    </button>
+                    <span class="form-hint" id="status-count-hint">4 / 10 옵션 사용 중</span>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">프리셋 불러오기</label>
+                    <div class="status-preset-selector">
+                      <button class="status-preset-btn" onclick="loadStatusPreset('progress')">진행 상태</button>
+                      <button class="status-preset-btn" onclick="loadStatusPreset('priority')">우선순위</button>
+                      <button class="status-preset-btn" onclick="loadStatusPreset('grade')">등급</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 입력형 상세 설정 -->
+                <div class="input-detail-config" style="display: none;">
+                  <div class="form-group">
+                    <label class="form-label">단위 설정</label>
+                    <input type="text" class="form-input" id="input-unit" placeholder="예: 분, kg, L, 개" maxlength="10">
+                    <span class="form-hint">입력값 뒤에 표시될 단위 (선택사항)</span>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">목표값 (선택)</label>
+                    <input type="number" class="form-input" id="input-target" placeholder="예: 30 (30분 목표)">
+                    <span class="form-hint">목표값을 설정하면 달성률이 표시됩니다</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 반복 설정 (반복형일 때만 표시) -->
+            <div class="form-section repeat-settings" style="display: none;">
+              <h3 class="section-title">🔄 반복 주기</h3>
+              
+              <div class="repeat-cycle-selector">
+                <button class="cycle-btn active" data-cycle="daily">
+                  <span class="cycle-icon">📆</span>
+                  <span class="cycle-text">일간</span>
+                  <span class="cycle-desc">매일 리셋</span>
+                </button>
+                <button class="cycle-btn" data-cycle="weekly">
+                  <span class="cycle-icon">📅</span>
+                  <span class="cycle-text">주간</span>
+                  <span class="cycle-desc">매주 일요일 리셋</span>
+                </button>
+                <button class="cycle-btn" data-cycle="monthly">
+                  <span class="cycle-icon">🗓️</span>
+                  <span class="cycle-text">월간</span>
+                  <span class="cycle-desc">매월 1일 리셋</span>
+                </button>
+                <button class="cycle-btn" data-cycle="yearly">
+                  <span class="cycle-icon">📖</span>
+                  <span class="cycle-text">연간</span>
+                  <span class="cycle-desc">1월 1일 리셋</span>
+                </button>
+              </div>
+
+              <!-- 일간 퀘스트 설정 -->
+              <div class="cycle-config daily-cycle-config">
+                <label class="form-label">일간 퀘스트 타입</label>
+                <div class="daily-type-selector">
+                  <button class="daily-type-btn active" data-daily-type="everyday">매일 1회</button>
+                  <button class="daily-type-btn" data-daily-type="weekdays">특정 요일</button>
+                  <button class="daily-type-btn" data-daily-type="interval">N일마다 1회</button>
+                </div>
+
+                <!-- 매일 -->
+                <div class="daily-type-config everyday-config">
+                  <p class="config-info">✅ 매일 1회 수행합니다</p>
+                </div>
+
+                <!-- 특정 요일 -->
+                <div class="daily-type-config weekdays-config" style="display: none;">
+                  <label class="form-label">요일 선택</label>
+                  <div class="weekday-selector">
+                    <button class="weekday-btn" data-day="0">일</button>
+                    <button class="weekday-btn" data-day="1">월</button>
+                    <button class="weekday-btn" data-day="2">화</button>
+                    <button class="weekday-btn" data-day="3">수</button>
+                    <button class="weekday-btn" data-day="4">목</button>
+                    <button class="weekday-btn" data-day="5">금</button>
+                    <button class="weekday-btn" data-day="6">토</button>
+                  </div>
+                  <span class="form-hint">선택한 요일에만 퀘스트가 생성됩니다</span>
+                </div>
+
+                <!-- N일마다 -->
+                <div class="daily-type-config interval-config" style="display: none;">
+                  <label class="form-label">반복 간격</label>
+                  <div class="interval-input-group">
+                    <input type="number" class="form-input-small" id="interval-value" value="3" min="1" max="30">
+                    <span>일마다 1회</span>
+                  </div>
+                  <span class="form-hint">예: 3일마다 1번, 7일마다 1번</span>
+                </div>
+              </div>
+
+              <!-- 주간 퀘스트 설정 -->
+              <div class="cycle-config weekly-cycle-config" style="display: none;">
+                <label class="form-label">주간 목표 횟수</label>
+                <p class="config-desc">매주 일요일에 초기화되며, 일주일 동안 아래 횟수만큼 수행하면 됩니다</p>
+                <div class="count-input-group">
+                  <span>주</span>
+                  <input type="number" class="form-input-small" id="weekly-count" value="3" min="1" max="7">
+                  <span>회</span>
+                </div>
+                <div class="count-examples">
+                  <button class="count-preset" data-count="1">주 1회</button>
+                  <button class="count-preset" data-count="3">주 3회</button>
+                  <button class="count-preset" data-count="5">주 5회</button>
+                  <button class="count-preset" data-count="7">매일</button>
+                </div>
+              </div>
+
+              <!-- 월간 퀘스트 설정 -->
+              <div class="cycle-config monthly-cycle-config" style="display: none;">
+                <label class="form-label">월간 퀘스트 타입</label>
+                <div class="monthly-type-selector">
+                  <button class="monthly-type-btn active" data-monthly-type="count">횟수형</button>
+                  <button class="monthly-type-btn" data-monthly-type="date">날짜형</button>
+                </div>
+
+                <!-- 횟수형 -->
+                <div class="monthly-type-config count-type-config">
+                  <p class="config-desc">매월 1일에 초기화되며, 한 달 동안 아래 횟수만큼 수행하면 됩니다</p>
+                  <div class="count-input-group">
+                    <span>월</span>
+                    <input type="number" class="form-input-small" id="monthly-count" value="10" min="1" max="31">
+                    <span>회</span>
+                  </div>
+                  <div class="count-examples">
+                    <button class="count-preset" data-count="1">월 1회</button>
+                    <button class="count-preset" data-count="5">월 5회</button>
+                    <button class="count-preset" data-count="10">월 10회</button>
+                    <button class="count-preset" data-count="20">월 20회</button>
+                  </div>
+                </div>
+
+                <!-- 날짜형 -->
+                <div class="monthly-type-config date-type-config" style="display: none;">
+                  <p class="config-desc">매월 선택한 날짜에 퀘스트가 생성됩니다</p>
+                  
+                  <div class="form-group">
+                    <label class="form-label">생성 날짜 (일)</label>
+                    <div class="date-selector">
+                      <button class="date-btn" data-date="1">1일 (초)</button>
+                      <button class="date-btn" data-date="15">15일 (중순)</button>
+                      <button class="date-btn custom-date-btn">직접 입력</button>
+                    </div>
+                    <input type="number" class="form-input" id="monthly-date" placeholder="1~31 사이 숫자" min="1" max="31" style="margin-top: 12px;">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">수행 기간</label>
+                    <div class="duration-input-group">
+                      <input type="number" class="form-input-small" id="monthly-duration" value="3" min="1" max="31">
+                      <span>일 이내 완료</span>
+                    </div>
+                    <span class="form-hint">예: 매월 15일 생성, 3일 이내 완료 (15~17일)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 연간 퀘스트 설정 -->
+              <div class="cycle-config yearly-cycle-config" style="display: none;">
+                <label class="form-label">연간 퀘스트 타입</label>
+                <div class="yearly-type-selector">
+                  <button class="yearly-type-btn active" data-yearly-type="count">횟수형</button>
+                  <button class="yearly-type-btn" data-yearly-type="date">날짜형</button>
+                </div>
+
+                <!-- 횟수형 -->
+                <div class="yearly-type-config count-type-config">
+                  <p class="config-desc">매년 1월 1일에 초기화되며, 1년 동안 아래 횟수만큼 수행하면 됩니다</p>
+                  <div class="count-input-group">
+                    <span>연</span>
+                    <input type="number" class="form-input-small" id="yearly-count" value="12" min="1" max="365">
+                    <span>회</span>
+                  </div>
+                  <div class="count-examples">
+                    <button class="count-preset" data-count="12">연 12회 (월 1회)</button>
+                    <button class="count-preset" data-count="52">연 52회 (주 1회)</button>
+                    <button class="count-preset" data-count="100">연 100회</button>
+                    <button class="count-preset" data-count="365">매일</button>
+                  </div>
+                </div>
+
+                <!-- 날짜형 -->
+                <div class="yearly-type-config date-type-config" style="display: none;">
+                  <p class="config-desc">매년 선택한 날짜에 퀘스트가 생성됩니다</p>
+                  
+                  <div class="form-group">
+                    <label class="form-label">생성 날짜</label>
+                    <div class="yearly-date-input">
+                      <select class="form-select-small" id="yearly-month">
+                        <option value="1">1월</option>
+                        <option value="2">2월</option>
+                        <option value="3">3월</option>
+                        <option value="4">4월</option>
+                        <option value="5">5월</option>
+                        <option value="6">6월</option>
+                        <option value="7">7월</option>
+                        <option value="8">8월</option>
+                        <option value="9">9월</option>
+                        <option value="10">10월</option>
+                        <option value="11">11월</option>
+                        <option value="12">12월</option>
+                      </select>
+                      <input type="number" class="form-input-small" id="yearly-day" value="1" min="1" max="31">
+                      <span>일</span>
+                    </div>
+                    <div class="date-examples">
+                      <button class="date-preset-btn" data-month="1" data-day="1">1월 1일 (신년)</button>
+                      <button class="date-preset-btn" data-month="12" data-day="25">12월 25일 (크리스마스)</button>
+                      <button class="date-preset-btn" data-month="12" data-day="31">12월 31일 (연말)</button>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">수행 기간</label>
+                    <div class="duration-input-group">
+                      <input type="number" class="form-input-small" id="yearly-duration" value="7" min="1" max="365">
+                      <span>일 이내 완료</span>
+                    </div>
+                    <span class="form-hint">예: 1월 1일 생성, 7일 이내 완료 (1/1~1/7)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 날짜 설정 (변경 가능) -->
+            <div class="form-section">
+              <h3 class="section-title">📅 날짜 설정</h3>
+              
+              <div class="date-toggle-group">
+                <div class="toggle-item">
+                  <label class="form-label">시작 날짜</label>
+                  <button class="toggle-btn off" data-target="start-date-input">OFF</button>
+                </div>
+                <div id="start-date-input" style="display: none; margin-top: 12px;">
+                  <input type="date" class="form-input" id="start-date">
+                  <span class="form-hint">OFF일 경우 오늘부터 시작</span>
+                </div>
+              </div>
+
+              <div class="date-toggle-group" style="margin-top: 20px;">
+                <div class="toggle-item">
+                  <label class="form-label">종료 날짜</label>
+                  <button class="toggle-btn off" data-target="end-date-input">OFF</button>
+                </div>
+                <div id="end-date-input" style="display: none; margin-top: 12px;">
+                  <input type="date" class="form-input" id="end-date">
+                  <span class="form-hint">OFF일 경우 무기한</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 시간 설정 -->
+            <div class="form-section">
+              <h3 class="section-title">⏰ 시간 설정</h3>
+              
+              <div class="date-toggle-group">
+                <div class="toggle-item">
+                  <label class="form-label">특정 시간 알림</label>
+                  <button class="toggle-btn off" data-target="time-input">OFF</button>
+                </div>
+                <div id="time-input" style="display: none; margin-top: 12px;">
+                  <input type="time" class="form-input" id="quest-time">
+                  <span class="form-hint">설정한 시간에 알림을 받습니다</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
