@@ -3,7 +3,9 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import './Login.css'
 import { login } from '../api/authApi'
 import { startKakaoLogin } from '../api/kakaoApi'
+import { startNaverLogin } from '../api/naverApi'
 import kakaoLoginImage from '../asset/images/kakao/kakao_login_medium_wide.png'
+import naverIconImage from '../asset/images/naver/btnG_아이콘원형.png'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -12,9 +14,13 @@ const Login = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  // 카카오 로그인 후 리다이렉트된 경우 토큰 처리
+  // 소셜 로그인 후 리다이렉트된 경우 처리
   useEffect(() => {
     const token = searchParams.get('token')
+    const email = searchParams.get('email')
+    const from = searchParams.get('from')
+    
+    // 토큰이 있으면 로그인 성공 처리
     if (token) {
       // 토큰을 localStorage에 저장
       localStorage.setItem('token', token)
@@ -31,6 +37,10 @@ const Login = () => {
       
       // 로그인 성공 시 홈으로 이동
       navigate('/')
+    }
+    // 이메일과 from 파라미터가 있으면 회원가입 페이지로 이동 (사용자가 없는 경우)
+    else if (email && from) {
+      navigate(`/signup?email=${encodeURIComponent(email)}&from=${from}`)
     }
   }, [searchParams, navigate])
 
@@ -103,17 +113,32 @@ const Login = () => {
           <span>또는</span>
         </div>
 
-        <button 
-          type="button" 
-          className="kakao-login-button"
-          onClick={startKakaoLogin}
-        >
-          <img 
-            src={kakaoLoginImage} 
-            alt="카카오 로그인" 
-            className="kakao-login-image"
-          />
-        </button>
+        <div className="social-login-buttons-container">
+          <button 
+            type="button" 
+            className="kakao-login-button"
+            onClick={startKakaoLogin}
+          >
+            <img 
+              src={kakaoLoginImage} 
+              alt="카카오 로그인" 
+              className="kakao-login-image"
+            />
+          </button>
+
+          <button 
+            type="button" 
+            className="social-login-button naver-button"
+            onClick={startNaverLogin}
+          >
+            <img 
+              src={naverIconImage} 
+              alt="네이버 로그인" 
+              className="social-button-icon"
+            />
+            <span className="social-button-text">네이버 로그인</span>
+          </button>
+        </div>
 
         <div className="auth-footer">
           <p>
