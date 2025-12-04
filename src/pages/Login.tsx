@@ -5,7 +5,6 @@ import { login } from '../api/authApi'
 import { startKakaoLogin } from '../api/kakaoApi'
 import { startNaverLogin } from '../api/naverApi'
 import kakaoLoginImage from '../asset/images/kakao/kakao_login_medium_wide.png'
-import naverIconImage from '../asset/images/naver/btnG_아이콘원형.png'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -131,11 +130,6 @@ const Login = () => {
             className="social-login-button naver-button"
             onClick={startNaverLogin}
           >
-            <img 
-              src={naverIconImage} 
-              alt="네이버 로그인" 
-              className="social-button-icon"
-            />
             <span className="social-button-text">네이버 로그인</span>
           </button>
         </div>
