@@ -551,6 +551,84 @@
             background: #c0392b;
         }
 
+        /* 토스트 알림 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 3000;
+            animation: slideInRight 0.3s ease;
+            min-width: 280px;
+            max-width: 400px;
+        }
+
+        .toast.hide {
+            animation: slideOutRight 0.3s ease forwards;
+        }
+
+        .toast-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .toast.success {
+            border-left: 4px solid #2ecc71;
+        }
+
+        .toast.error {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #f39c12;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
         /* 반응형 */
         @media (max-width: 768px) {
             .modal-container {
@@ -570,6 +648,34 @@
 
             .confirm-modal {
                 width: 85%;
+            }
+
+            .toast {
+                left: 20px;
+                right: 20px;
+                min-width: auto;
+            }
+
+            @keyframes slideInRight {
+                from {
+                    transform: translateY(-100px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOutRight {
+                from {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateY(-100px);
+                    opacity: 0;
+                }
             }
         }
     </style>
@@ -717,17 +823,33 @@
             { nickname: '아이언맨', role: 'Member', status: 'active' }
         ];
         let memberToRemove = null; // 강퇴 대상 멤버
+        let toastTimeout = null;
 
         // 권한 테스트용 - 사용자 전환
         function toggleUser() {
             if (currentUser === '아리랑') {
+                currentUser = '슈퍼맨'; // Manager 권한
+            } else if (currentUser === '슈퍼맨') {
                 currentUser = '스파이더맨'; // Member 권한
             } else {
                 currentUser = '아리랑'; // Leader 권한
             }
             document.getElementById('currentUserDisplay').textContent = currentUser;
             renderMemberList();
-            alert(`현재 사용자를 "${currentUser}"로 변경했습니다.\n${currentUser === '아리랑' ? 'Leader 권한: 모든 멤버의 권한을 변경할 수 있습니다.' : 'Member 권한: 권한을 볼 수만 있습니다.'}`);
+            
+            let roleInfo = '';
+            const userData = members.find(m => m.nickname === currentUser);
+            if (userData) {
+                if (userData.role === 'Leader') {
+                    roleInfo = 'Leader 권한: Manager, Member 강퇴 가능';
+                } else if (userData.role === 'Manager') {
+                    roleInfo = 'Manager 권한: Member만 강퇴 가능';
+                } else {
+                    roleInfo = 'Member 권한: 강퇴 불가';
+                }
+            }
+            
+            alert(`현재 사용자를 "${currentUser}"로 변경했습니다.\n${roleInfo}`);
         }
 
         // 모달 열기
@@ -839,13 +961,18 @@
         function confirmRemoveMember() {
             if (memberToRemove) {
                 const member = members.find(m => m.nickname === memberToRemove);
-                const statusText = member.status === 'pending' ? '초대를 취소했습니다' : '강퇴했습니다';
+                const isPending = member.status === 'pending';
+                const nickname = memberToRemove;
                 
                 members = members.filter(m => m.nickname !== memberToRemove);
                 renderMemberList();
                 closeConfirmModal();
                 
-                alert(`"${memberToRemove}"님을 ${statusText}. ✅`);
+                // 성공 토스트 표시
+                setTimeout(() => {
+                    showSuccessToast(nickname, isPending);
+                }, 300);
+                
                 memberToRemove = null;
             }
         }
@@ -854,6 +981,20 @@
         function updateMemberRole(index, newRole) {
             members[index].role = newRole;
             console.log(`${members[index].nickname}의 권한이 ${newRole}로 변경되었습니다.`);
+        }
+
+        // 강퇴 권한 체크
+        function canRemoveMember(currentUserRole, targetMemberRole) {
+            if (currentUserRole === 'Leader') {
+                // Leader는 Manager, Member 강퇴 가능
+                return targetMemberRole === 'Manager' || targetMemberRole === 'Member';
+            } else if (currentUserRole === 'Manager') {
+                // Manager는 Member만 강퇴 가능
+                return targetMemberRole === 'Member';
+            } else {
+                // Member는 강퇴 불가
+                return false;
+            }
         }
 
         // 멤버 리스트 렌더링
@@ -871,7 +1012,8 @@
 
             // 현재 사용자의 권한 확인
             const currentUserData = members.find(m => m.nickname === currentUser);
-            const isLeader = currentUserData && currentUserData.role === 'Leader';
+            const currentUserRole = currentUserData ? currentUserData.role : 'Member';
+            const isLeader = currentUserRole === 'Leader';
 
             // 권한별 아이콘 매핑
             const roleIcons = {
@@ -886,6 +1028,10 @@
                 const avatarColor = avatarColors[index % avatarColors.length];
                 const isPending = member.status === 'pending';
                 const pendingClass = isPending ? 'pending' : '';
+                
+                // 강퇴 권한 체크
+                const canRemove = member.nickname !== currentUser && 
+                                  (isPending || canRemoveMember(currentUserRole, member.role));
                 
                 return `
                     <div class="invited-member ${pendingClass}">
@@ -905,8 +1051,8 @@
                             ` : `
                                 <span class="role-display">${roleIcons[member.role]} ${member.role}</span>
                             `}
-                            ${((isLeader && member.nickname !== currentUser) || member.status === 'pending') ? `
-                                <button class="remove-member-btn" data-nickname="${member.nickname}" title="멤버 제거">
+                            ${canRemove ? `
+                                <button class="remove-member-btn" data-nickname="${member.nickname}" data-role="${member.role}" title="멤버 제거">
                                     ✕
                                 </button>
                             ` : ''}
@@ -920,6 +1066,15 @@
                 document.querySelectorAll('.remove-member-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const nickname = this.getAttribute('data-nickname');
+                        const targetRole = this.getAttribute('data-role');
+                        
+                        // 권한 재확인
+                        if (!canRemoveMember(currentUserRole, targetRole) && 
+                            members.find(m => m.nickname === nickname).status !== 'pending') {
+                            showNoPermissionToast();
+                            return;
+                        }
+                        
                         removeMember(nickname);
                     });
                 });
@@ -990,6 +1145,81 @@
                 updateWorkspace();
             }
         });
+
+        /**
+         * 토스트 알림 표시
+         * @param {string} type - 알림 타입 ('success', 'error', 'warning')
+         * @param {string} icon - 아이콘 이모지
+         * @param {string} title - 제목
+         * @param {string} message - 메시지
+         * @param {number} duration - 표시 시간 (밀리초, 기본 3000ms)
+         */
+        function showToast(type, icon, title, message, duration = 3000) {
+            // 기존 토스트가 있으면 제거
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+                if (toastTimeout) {
+                    clearTimeout(toastTimeout);
+                }
+            }
+
+            // 토스트 생성
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+
+            // 일정 시간 후 제거
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, duration);
+        }
+
+        /**
+         * 권한 없음 알림
+         */
+        function showNoPermissionToast() {
+            showToast(
+                'error',
+                '🚫',
+                '권한이 없습니다',
+                '이 멤버를 강퇴할 수 있는 권한이 없습니다.'
+            );
+        }
+
+        /**
+         * 삭제 완료 알림
+         * @param {string} nickname - 강퇴된 멤버 닉네임
+         * @param {boolean} isPending - 초대 취소 여부
+         */
+        function showSuccessToast(nickname, isPending = false) {
+            if (isPending) {
+                showToast(
+                    'success',
+                    '✅',
+                    '초대 취소 완료',
+                    `"${nickname}"님에 대한 초대가 취소되었습니다.`
+                );
+            } else {
+                showToast(
+                    'success',
+                    '✅',
+                    '멤버 강퇴 완료',
+                    `"${nickname}"님이 워크스페이스에서 제거되었습니다.`
+                );
+            }
+        }
     </script>
 </body>
 </html>
