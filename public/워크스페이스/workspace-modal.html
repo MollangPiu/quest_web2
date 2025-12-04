@@ -208,10 +208,16 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 12px;
+            padding: 12px;
             background: white;
             border-radius: 8px;
             border: 1px solid #e0e0e0;
+            transition: all 0.2s;
+        }
+
+        .invited-member:hover {
+            border-color: #4a90e2;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
         }
 
         .member-info {
@@ -234,8 +240,9 @@
             font-weight: 600;
         }
 
-        .member-email {
+        .member-nickname {
             font-size: 14px;
+            font-weight: 500;
             color: #333;
         }
 
@@ -276,12 +283,13 @@
             background: #4a90e2;
             color: white;
             border: none;
-            padding: 10px 16px;
+            padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
             transition: background 0.2s;
+            white-space: nowrap;
         }
 
         .add-member-btn:hover {
@@ -561,12 +569,12 @@
                                 <span>멤버 초대</span>
                             </div>
                             
-                            <!-- 이메일 입력 폼 -->
+                            <!-- 닉네임 입력 폼 -->
                             <div class="add-member-form">
                                 <input 
-                                    type="email" 
-                                    id="memberEmailInput" 
-                                    placeholder="이메일 주소 입력"
+                                    type="text" 
+                                    id="memberNicknameInput" 
+                                    placeholder="닉네임 입력"
                                 />
                                 <button type="button" class="add-member-btn" onclick="addMember()">
                                     추가
@@ -577,7 +585,7 @@
                             <div style="margin-top: 16px;">
                                 <div class="invite-list" id="inviteList">
                                     <div class="empty-invite-state">
-                                        초대할 멤버의 이메일을<br>입력해주세요
+                                        초대할 멤버의<br>닉네임을 입력해주세요
                                     </div>
                                 </div>
                             </div>
@@ -670,36 +678,30 @@
 
         // 멤버 추가
         function addMember() {
-            const input = document.getElementById('memberEmailInput');
-            const email = input.value.trim();
+            const nicknameInput = document.getElementById('memberNicknameInput');
+            const nickname = nicknameInput.value.trim();
 
-            if (!email) {
-                alert('이메일을 입력해주세요!');
+            if (!nickname) {
+                alert('닉네임을 입력해주세요!');
                 return;
             }
 
-            // 이메일 형식 검증
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                alert('올바른 이메일 형식을 입력해주세요!');
-                return;
-            }
-
-            // 중복 체크
-            if (invitedMembers.includes(email)) {
-                alert('이미 추가된 멤버입니다!');
+            // 중복 체크 (닉네임 기준)
+            if (invitedMembers.includes(nickname)) {
+                alert('이미 추가된 닉네임입니다!');
                 return;
             }
 
             // 멤버 추가
-            invitedMembers.push(email);
-            input.value = '';
+            invitedMembers.push(nickname);
+            nicknameInput.value = '';
+            nicknameInput.focus();
             renderInviteList();
         }
 
         // 멤버 제거
-        function removeMember(email) {
-            invitedMembers = invitedMembers.filter(m => m !== email);
+        function removeMember(nickname) {
+            invitedMembers = invitedMembers.filter(m => m !== nickname);
             renderInviteList();
         }
 
@@ -710,21 +712,21 @@
             if (invitedMembers.length === 0) {
                 listContainer.innerHTML = `
                     <div class="empty-invite-state">
-                        초대할 멤버의 이메일을<br>입력해주세요
+                        초대할 멤버의<br>닉네임을 입력해주세요
                     </div>
                 `;
                 return;
             }
 
-            listContainer.innerHTML = invitedMembers.map(email => {
-                const initial = email.charAt(0).toUpperCase();
+            listContainer.innerHTML = invitedMembers.map(nickname => {
+                const initial = nickname.charAt(0).toUpperCase();
                 return `
                     <div class="invited-member">
                         <div class="member-info">
                             <div class="member-avatar">${initial}</div>
-                            <div class="member-email">${email}</div>
+                            <div class="member-nickname">${nickname}</div>
                         </div>
-                        <button class="remove-member-btn" onclick="removeMember('${email}')">
+                        <button class="remove-member-btn" onclick="removeMember('${nickname}')">
                             ✕
                         </button>
                     </div>
@@ -734,9 +736,10 @@
 
         // Enter 키로 멤버 추가
         document.addEventListener('DOMContentLoaded', function() {
-            const memberInput = document.getElementById('memberEmailInput');
-            if (memberInput) {
-                memberInput.addEventListener('keypress', function(e) {
+            const nicknameInput = document.getElementById('memberNicknameInput');
+            
+            if (nicknameInput) {
+                nicknameInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         addMember();
@@ -794,7 +797,8 @@
             const typeText = selectedType === 'personal' ? '개인' : '팀';
             let successMsg = `${typeText} 워크스페이스 "${name}"가 생성되었습니다! 🎉`;
             if (selectedType === 'team' && invitedMembers.length > 0) {
-                successMsg += `\n${invitedMembers.length}명에게 초대 메일이 발송됩니다.`;
+                successMsg += `\n초대된 멤버: ${invitedMembers.join(', ')}`;
+                successMsg += `\n${invitedMembers.length}명이 초대되었습니다.`;
             }
             alert(successMsg);
             
