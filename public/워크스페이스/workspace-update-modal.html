@@ -237,6 +237,31 @@
             gap: 10px;
         }
 
+        .pending-badge {
+            padding: 4px 10px;
+            background: #fff4e6;
+            color: #e67e22;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .member-role-select:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+            color: #999;
+        }
+
+        .invited-member.pending {
+            opacity: 0.75;
+            background: #fafafa;
+        }
+
+        .invited-member.pending .member-avatar {
+            background: #bbb !important;
+        }
+
         .member-role-select {
             padding: 8px 12px;
             border: 2px solid #e0e0e0;
@@ -544,11 +569,11 @@
     <script>
         let selectedColor = '#4a90e2';
         let members = [
-            { nickname: '아리랑', role: '방장' },
-            { nickname: '슈퍼맨', role: 'manager' },
-            { nickname: '배트맨', role: 'manager' },
-            { nickname: '스파이더맨', role: 'member' },
-            { nickname: '아이언맨', role: 'member' }
+            { nickname: '아리랑', role: '방장', status: 'active' },
+            { nickname: '슈퍼맨', role: 'manager', status: 'active' },
+            { nickname: '배트맨', role: 'manager', status: 'pending' },  // 초대 대기 중
+            { nickname: '스파이더맨', role: 'member', status: 'active' },
+            { nickname: '아이언맨', role: 'member', status: 'active' }
         ];
 
         // 모달 열기
@@ -596,11 +621,13 @@
                 return;
             }
 
-            // 멤버 추가 (기본 권한: member)
-            members.push({ nickname, role: 'member' });
+            // 멤버 추가 (기본 권한: member, 상태: pending - 초대 중)
+            members.push({ nickname, role: 'member', status: 'pending' });
             nicknameInput.value = '';
             nicknameInput.focus();
             renderMemberList();
+            
+            alert(`"${nickname}"님에게 초대 메시지가 발송되었습니다! 📨`);
         }
 
         // 멤버 제거
@@ -634,19 +661,25 @@
                 const initial = member.nickname.charAt(0).toUpperCase();
                 const avatarColors = ['#4a90e2', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
                 const avatarColor = avatarColors[index % avatarColors.length];
+                const isPending = member.status === 'pending';
+                const pendingClass = isPending ? 'pending' : '';
                 
                 return `
-                    <div class="invited-member">
+                    <div class="invited-member ${pendingClass}">
                         <div class="member-info">
                             <div class="member-avatar" style="background: ${avatarColor};">${initial}</div>
                             <div class="member-nickname">${member.nickname}</div>
                         </div>
                         <div class="member-actions">
-                            <select class="member-role-select" onchange="updateMemberRole(${index}, this.value)">
-                                <option value="방장" ${member.role === '방장' ? 'selected' : ''}>방장</option>
-                                <option value="manager" ${member.role === 'manager' ? 'selected' : ''}>Manager</option>
-                                <option value="member" ${member.role === 'member' ? 'selected' : ''}>Member</option>
-                            </select>
+                            ${isPending ? `
+                                <span class="pending-badge">📨 초대 중</span>
+                            ` : `
+                                <select class="member-role-select" onchange="updateMemberRole(${index}, this.value)">
+                                    <option value="방장" ${member.role === '방장' ? 'selected' : ''}>방장</option>
+                                    <option value="manager" ${member.role === 'manager' ? 'selected' : ''}>Manager</option>
+                                    <option value="member" ${member.role === 'member' ? 'selected' : ''}>Member</option>
+                                </select>
+                            `}
                             <button class="remove-member-btn" onclick="removeMember('${member.nickname}')" title="멤버 제거">
                                 ✕
                             </button>
