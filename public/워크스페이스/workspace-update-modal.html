@@ -421,6 +421,8 @@
         .btn-update {
             background: #4a90e2;
             color: white;
+            position: relative;
+            transition: all 0.3s;
         }
 
         .btn-update:hover {
@@ -430,6 +432,72 @@
         .btn-update:disabled {
             background: #ccc;
             cursor: not-allowed;
+        }
+
+        .btn-update.has-changes {
+            background: #2ecc71;
+            animation: pulse 2s infinite;
+        }
+
+        .btn-update.has-changes:hover {
+            background: #27ae60;
+        }
+
+        .btn-update.has-changes::after {
+            content: '●';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 12px;
+            height: 12px;
+            background: #e74c3c;
+            border-radius: 50%;
+            font-size: 8px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .changes-indicator {
+            position: fixed;
+            bottom: 100px;
+            right: 32px;
+            background: #fff4e6;
+            border: 2px solid #f39c12;
+            border-radius: 12px;
+            padding: 12px 20px;
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.2);
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 1500;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .changes-indicator.show {
+            display: flex;
+        }
+
+        .changes-indicator-icon {
+            font-size: 20px;
+        }
+
+        .changes-indicator-text {
+            font-size: 13px;
+            color: #e67e22;
+            font-weight: 500;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1); 
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4);
+            }
+            50% { 
+                transform: scale(1.05); 
+                box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);
+            }
         }
 
         /* 애니메이션 */
@@ -805,25 +873,42 @@
                 <button class="btn-cancel" type="button" onclick="closeModal()">
                     취소
                 </button>
-                <button class="btn-update" type="button" onclick="updateWorkspace()">
+                <button class="btn-update" id="updateBtn" type="button" onclick="updateWorkspace()">
                     수정 완료
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- 변경사항 인디케이터 -->
+    <div class="changes-indicator" id="changesIndicator">
+        <div class="changes-indicator-icon">⚠️</div>
+        <div class="changes-indicator-text">저장되지 않은 변경사항이 있습니다</div>
+    </div>
+
     <script>
         let selectedColor = '#4a90e2';
-        let currentUser = '아리랑'; // 현재 로그인한 사용자 (테스트: 아리랑=Leader, 스파이더맨으로 바꾸면 Member 권한)
-        let members = [
-            { nickname: '아리랑', role: 'Leader', status: 'active' },
-            { nickname: '슈퍼맨', role: 'Manager', status: 'active' },
-            { nickname: '배트맨', role: 'Manager', status: 'pending' },  // 초대 대기 중
-            { nickname: '스파이더맨', role: 'Member', status: 'active' },
-            { nickname: '아이언맨', role: 'Member', status: 'active' }
-        ];
-        let memberToRemove = null; // 강퇴 대상 멤버
+        let currentUser = '아리랑'; // 현재 로그인한 사용자
+        
+        // 원본 데이터 (서버에서 가져온 데이터)
+        let originalData = {
+            name: '마케팅 프로젝트',
+            description: '2024 신제품 마케팅 캠페인 관련 작업',
+            color: '#4a90e2',
+            members: [
+                { nickname: '아리랑', role: 'Leader', status: 'active' },
+                { nickname: '슈퍼맨', role: 'Manager', status: 'active' },
+                { nickname: '배트맨', role: 'Manager', status: 'pending' },
+                { nickname: '스파이더맨', role: 'Member', status: 'active' },
+                { nickname: '아이언맨', role: 'Member', status: 'active' }
+            ]
+        };
+        
+        // 현재 편집 중인 데이터 (임시 변경사항)
+        let members = JSON.parse(JSON.stringify(originalData.members));
+        let memberToRemove = null;
         let toastTimeout = null;
+        let hasChanges = false; // 변경사항 여부
 
         // 권한 테스트용 - 사용자 전환
         function toggleUser() {
@@ -841,15 +926,43 @@
             const userData = members.find(m => m.nickname === currentUser);
             if (userData) {
                 if (userData.role === 'Leader') {
-                    roleInfo = 'Leader 권한: Manager, Member 강퇴 가능';
+                    roleInfo = 'Leader 권한: 모든 멤버 강퇴 가능 (Manager, Member, 초대 중)';
                 } else if (userData.role === 'Manager') {
-                    roleInfo = 'Manager 권한: Member만 강퇴 가능';
+                    roleInfo = 'Manager 권한: Member 및 초대 중인 사람 강퇴 가능';
                 } else {
-                    roleInfo = 'Member 권한: 강퇴 불가';
+                    roleInfo = 'Member 권한: 아무도 강퇴 불가 (초대 중 포함)';
                 }
             }
             
             alert(`현재 사용자를 "${currentUser}"로 변경했습니다.\n${roleInfo}`);
+        }
+
+        // 변경사항 체크
+        function checkForChanges() {
+            const currentName = document.getElementById('workspaceName').value.trim();
+            const currentDesc = document.getElementById('workspaceDesc').value.trim();
+            
+            // 이름, 설명, 색상, 멤버 변경사항 확인
+            const nameChanged = currentName !== originalData.name;
+            const descChanged = currentDesc !== originalData.description;
+            const colorChanged = selectedColor !== originalData.color;
+            const membersChanged = JSON.stringify(members) !== JSON.stringify(originalData.members);
+            
+            hasChanges = nameChanged || descChanged || colorChanged || membersChanged;
+            
+            // UI 업데이트
+            const updateBtn = document.getElementById('updateBtn');
+            const indicator = document.getElementById('changesIndicator');
+            
+            if (hasChanges) {
+                updateBtn.classList.add('has-changes');
+                updateBtn.textContent = '변경사항 저장';
+                indicator.classList.add('show');
+            } else {
+                updateBtn.classList.remove('has-changes');
+                updateBtn.textContent = '수정 완료';
+                indicator.classList.remove('show');
+            }
         }
 
         // 모달 열기
@@ -857,14 +970,40 @@
             const modal = document.getElementById('workspaceUpdateModal');
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
+            
+            // 원본 데이터로 초기화
+            document.getElementById('workspaceName').value = originalData.name;
+            document.getElementById('workspaceDesc').value = originalData.description;
+            selectedColor = originalData.color;
+            members = JSON.parse(JSON.stringify(originalData.members));
+            
+            // 색상 선택 초기화
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.color === selectedColor) {
+                    opt.classList.add('selected');
+                }
+            });
+            
             renderMemberList();
+            checkForChanges();
         }
 
         // 모달 닫기
         function closeModal() {
+            if (hasChanges) {
+                if (!confirm('저장되지 않은 변경사항이 있습니다.\n정말로 닫으시겠습니까?')) {
+                    return;
+                }
+            }
+            
             const modal = document.getElementById('workspaceUpdateModal');
             modal.classList.remove('active');
             document.body.style.overflow = '';
+            
+            // 변경사항 초기화
+            hasChanges = false;
+            checkForChanges();
         }
 
         // 오버레이 클릭 시 모달 닫기
@@ -914,8 +1053,9 @@
             nicknameInput.value = '';
             nicknameInput.focus();
             renderMemberList();
+            checkForChanges();
             
-            alert(`"${nickname}"님에게 초대 메시지가 발송되었습니다! 📨`);
+            showToast('success', '➕', '멤버 추가됨', `"${nickname}"님이 초대 목록에 추가되었습니다. 저장 버튼을 눌러 초대를 발송하세요.`, 2000);
         }
 
         // 멤버 제거 (확인 모달 열기)
@@ -966,11 +1106,16 @@
                 
                 members = members.filter(m => m.nickname !== memberToRemove);
                 renderMemberList();
+                checkForChanges();
                 closeConfirmModal();
                 
                 // 성공 토스트 표시
                 setTimeout(() => {
-                    showSuccessToast(nickname, isPending);
+                    if (isPending) {
+                        showToast('success', '✅', '초대 취소됨', `"${nickname}"님의 초대가 취소 목록에 추가되었습니다. 저장 버튼을 눌러 확정하세요.`, 2000);
+                    } else {
+                        showToast('success', '✅', '강퇴 예정', `"${nickname}"님이 강퇴 목록에 추가되었습니다. 저장 버튼을 눌러 확정하세요.`, 2000);
+                    }
                 }, 300);
                 
                 memberToRemove = null;
@@ -979,20 +1124,29 @@
 
         // 권한 변경
         function updateMemberRole(index, newRole) {
+            const oldRole = members[index].role;
             members[index].role = newRole;
-            console.log(`${members[index].nickname}의 권한이 ${newRole}로 변경되었습니다.`);
+            checkForChanges();
+            
+            const roleIcons = {
+                'Leader': '👑',
+                'Manager': '⚙️',
+                'Member': '👤'
+            };
+            
+            showToast('success', '🔄', '권한 변경됨', `"${members[index].nickname}"님의 권한이 ${roleIcons[newRole]} ${newRole}로 변경 예정입니다. 저장 버튼을 눌러 확정하세요.`, 2000);
         }
 
         // 강퇴 권한 체크
-        function canRemoveMember(currentUserRole, targetMemberRole) {
+        function canRemoveMember(currentUserRole, targetMemberRole, isPending = false) {
             if (currentUserRole === 'Leader') {
-                // Leader는 Manager, Member 강퇴 가능
-                return targetMemberRole === 'Manager' || targetMemberRole === 'Member';
+                // Leader는 Manager, Member 강퇴 가능 + pending 삭제 가능
+                return true;
             } else if (currentUserRole === 'Manager') {
-                // Manager는 Member만 강퇴 가능
-                return targetMemberRole === 'Member';
+                // Manager는 Member만 강퇴 가능 + pending 삭제 가능
+                return targetMemberRole === 'Member' || isPending;
             } else {
-                // Member는 강퇴 불가
+                // Member는 아무도 강퇴 못함 (pending 포함)
                 return false;
             }
         }
@@ -1029,9 +1183,9 @@
                 const isPending = member.status === 'pending';
                 const pendingClass = isPending ? 'pending' : '';
                 
-                // 강퇴 권한 체크
+                // 강퇴 권한 체크 (자기 자신이 아니고, 권한이 있을 때만)
                 const canRemove = member.nickname !== currentUser && 
-                                  (isPending || canRemoveMember(currentUserRole, member.role));
+                                  canRemoveMember(currentUserRole, member.role, isPending);
                 
                 return `
                     <div class="invited-member ${pendingClass}">
@@ -1067,10 +1221,11 @@
                     btn.addEventListener('click', function() {
                         const nickname = this.getAttribute('data-nickname');
                         const targetRole = this.getAttribute('data-role');
+                        const targetMember = members.find(m => m.nickname === nickname);
+                        const isPending = targetMember && targetMember.status === 'pending';
                         
                         // 권한 재확인
-                        if (!canRemoveMember(currentUserRole, targetRole) && 
-                            members.find(m => m.nickname === nickname).status !== 'pending') {
+                        if (!canRemoveMember(currentUserRole, targetRole, isPending)) {
                             showNoPermissionToast();
                             return;
                         }
@@ -1081,9 +1236,11 @@
             }, 0);
         }
 
-        // Enter 키로 멤버 추가
+        // Enter 키로 멤버 추가 & 입력 변경 감지
         document.addEventListener('DOMContentLoaded', function() {
             const nicknameInput = document.getElementById('memberNicknameInput');
+            const nameInput = document.getElementById('workspaceName');
+            const descInput = document.getElementById('workspaceDesc');
             
             if (nicknameInput) {
                 nicknameInput.addEventListener('keypress', function(e) {
@@ -1092,6 +1249,14 @@
                         addMember();
                     }
                 });
+            }
+
+            // 이름, 설명 변경 감지
+            if (nameInput) {
+                nameInput.addEventListener('input', checkForChanges);
+            }
+            if (descInput) {
+                descInput.addEventListener('input', checkForChanges);
             }
         });
 
@@ -1103,11 +1268,17 @@
                 });
                 this.classList.add('selected');
                 selectedColor = this.dataset.color;
+                checkForChanges();
             });
         });
 
         // 워크스페이스 수정
         function updateWorkspace() {
+            if (!hasChanges) {
+                showToast('warning', '⚠️', '변경사항 없음', '저장할 변경사항이 없습니다.', 2000);
+                return;
+            }
+
             const name = document.getElementById('workspaceName').value.trim();
             const desc = document.getElementById('workspaceDesc').value.trim();
 
@@ -1127,8 +1298,22 @@
 
             console.log('워크스페이스 수정:', workspaceData);
             
-            alert(`워크스페이스 "${name}"가 수정되었습니다! 🎉\n멤버 수: ${members.length}명`);
-            closeModal();
+            // 원본 데이터 업데이트
+            originalData = {
+                name: name,
+                description: desc,
+                color: selectedColor,
+                members: JSON.parse(JSON.stringify(members))
+            };
+            
+            hasChanges = false;
+            checkForChanges();
+            
+            showToast('success', '✅', '저장 완료', `워크스페이스 "${name}"의 변경사항이 저장되었습니다!`, 2000);
+            
+            setTimeout(() => {
+                closeModal();
+            }, 1500);
 
             // 실제 구현에서는 여기서 API 호출
             // fetch('/api/workspace/update', {
