@@ -247,6 +247,15 @@
             white-space: nowrap;
         }
 
+        .role-display {
+            padding: 6px 12px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
         .member-role-select:disabled {
             background: #f5f5f5;
             cursor: not-allowed;
@@ -465,9 +474,17 @@
 </head>
 <body>
     <!-- 트리거 버튼 (예시용) -->
-    <button class="trigger-btn" onclick="openModal()">
-        ✏️ 워크스페이스 수정하기
-    </button>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <button class="trigger-btn" onclick="openModal()">
+            ✏️ 워크스페이스 수정하기
+        </button>
+        <div style="padding: 8px 16px; background: white; border-radius: 8px; font-size: 14px;">
+            현재 사용자: <strong id="currentUserDisplay">아리랑</strong> 
+            <button onclick="toggleUser()" style="margin-left: 10px; padding: 4px 12px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                권한 테스트
+            </button>
+        </div>
+    </div>
 
     <!-- 모달 오버레이 -->
     <div class="modal-overlay" id="workspaceUpdateModal">
@@ -568,13 +585,26 @@
 
     <script>
         let selectedColor = '#4a90e2';
+        let currentUser = '아리랑'; // 현재 로그인한 사용자 (테스트: 아리랑=Leader, 스파이더맨으로 바꾸면 Member 권한)
         let members = [
-            { nickname: '아리랑', role: '방장', status: 'active' },
-            { nickname: '슈퍼맨', role: 'manager', status: 'active' },
-            { nickname: '배트맨', role: 'manager', status: 'pending' },  // 초대 대기 중
-            { nickname: '스파이더맨', role: 'member', status: 'active' },
-            { nickname: '아이언맨', role: 'member', status: 'active' }
+            { nickname: '아리랑', role: 'Leader', status: 'active' },
+            { nickname: '슈퍼맨', role: 'Manager', status: 'active' },
+            { nickname: '배트맨', role: 'Manager', status: 'pending' },  // 초대 대기 중
+            { nickname: '스파이더맨', role: 'Member', status: 'active' },
+            { nickname: '아이언맨', role: 'Member', status: 'active' }
         ];
+
+        // 권한 테스트용 - 사용자 전환
+        function toggleUser() {
+            if (currentUser === '아리랑') {
+                currentUser = '스파이더맨'; // Member 권한
+            } else {
+                currentUser = '아리랑'; // Leader 권한
+            }
+            document.getElementById('currentUserDisplay').textContent = currentUser;
+            renderMemberList();
+            alert(`현재 사용자를 "${currentUser}"로 변경했습니다.\n${currentUser === '아리랑' ? 'Leader 권한: 모든 멤버의 권한을 변경할 수 있습니다.' : 'Member 권한: 권한을 볼 수만 있습니다.'}`);
+        }
 
         // 모달 열기
         function openModal() {
@@ -621,8 +651,8 @@
                 return;
             }
 
-            // 멤버 추가 (기본 권한: member, 상태: pending - 초대 중)
-            members.push({ nickname, role: 'member', status: 'pending' });
+            // 멤버 추가 (기본 권한: Member, 상태: pending - 초대 중)
+            members.push({ nickname, role: 'Member', status: 'pending' });
             nicknameInput.value = '';
             nicknameInput.focus();
             renderMemberList();
@@ -657,6 +687,17 @@
                 return;
             }
 
+            // 현재 사용자의 권한 확인
+            const currentUserData = members.find(m => m.nickname === currentUser);
+            const isLeader = currentUserData && currentUserData.role === 'Leader';
+
+            // 권한별 아이콘 매핑
+            const roleIcons = {
+                'Leader': '👑',
+                'Manager': '⚙️',
+                'Member': '👤'
+            };
+
             listContainer.innerHTML = members.map((member, index) => {
                 const initial = member.nickname.charAt(0).toUpperCase();
                 const avatarColors = ['#4a90e2', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
@@ -672,17 +713,21 @@
                         </div>
                         <div class="member-actions">
                             ${isPending ? `
-                                <span class="pending-badge">📨 초대 중</span>
-                            ` : `
+                                <span class="pending-badge">✉️ Invited</span>
+                            ` : isLeader ? `
                                 <select class="member-role-select" onchange="updateMemberRole(${index}, this.value)">
-                                    <option value="방장" ${member.role === '방장' ? 'selected' : ''}>방장</option>
-                                    <option value="manager" ${member.role === 'manager' ? 'selected' : ''}>Manager</option>
-                                    <option value="member" ${member.role === 'member' ? 'selected' : ''}>Member</option>
+                                    <option value="Leader" ${member.role === 'Leader' ? 'selected' : ''}>👑 Leader</option>
+                                    <option value="Manager" ${member.role === 'Manager' ? 'selected' : ''}>⚙️ Manager</option>
+                                    <option value="Member" ${member.role === 'Member' ? 'selected' : ''}>👤 Member</option>
                                 </select>
+                            ` : `
+                                <span class="role-display">${roleIcons[member.role]} ${member.role}</span>
                             `}
-                            <button class="remove-member-btn" onclick="removeMember('${member.nickname}')" title="멤버 제거">
-                                ✕
-                            </button>
+                            ${(isLeader || member.status === 'pending') && member.nickname !== currentUser ? `
+                                <button class="remove-member-btn" onclick="removeMember('${member.nickname}')" title="멤버 제거">
+                                    ✕
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 `;
