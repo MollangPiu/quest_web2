@@ -140,6 +140,13 @@
             border-color: #4a90e2;
         }
 
+        .form-group input[readonly],
+        .form-group textarea[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+            color: #666;
+        }
+
         .form-group textarea {
             resize: vertical;
             min-height: 100px;
@@ -920,17 +927,44 @@
                 currentUser = '아리랑'; // Leader 권한
             }
             document.getElementById('currentUserDisplay').textContent = currentUser;
+            
+            // 권한에 따른 필드 활성화/비활성화
+            const userData = members.find(m => m.nickname === currentUser);
+            const currentUserRole = userData ? userData.role : 'Member';
+            const isLeader = currentUserRole === 'Leader';
+            
+            const nameInput = document.getElementById('workspaceName');
+            const descInput = document.getElementById('workspaceDesc');
+            const colorOptions = document.querySelectorAll('.color-option');
+            
+            if (isLeader) {
+                // Leader는 모든 것을 수정 가능
+                nameInput.removeAttribute('readonly');
+                descInput.removeAttribute('readonly');
+                colorOptions.forEach(opt => {
+                    opt.style.pointerEvents = 'auto';
+                    opt.style.opacity = '1';
+                });
+            } else {
+                // Manager, Member는 워크스페이스 기본 정보 수정 불가
+                nameInput.setAttribute('readonly', 'true');
+                descInput.setAttribute('readonly', 'true');
+                colorOptions.forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                    opt.style.opacity = '0.5';
+                });
+            }
+            
             renderMemberList();
             
             let roleInfo = '';
-            const userData = members.find(m => m.nickname === currentUser);
             if (userData) {
                 if (userData.role === 'Leader') {
-                    roleInfo = 'Leader 권한: 모든 멤버 강퇴 가능 (Manager, Member, 초대 중)';
+                    roleInfo = 'Leader 권한: 워크스페이스 정보 수정 가능, 모든 멤버 강퇴 가능';
                 } else if (userData.role === 'Manager') {
-                    roleInfo = 'Manager 권한: Member 및 초대 중인 사람 강퇴 가능';
+                    roleInfo = 'Manager 권한: Member 및 초대 중인 사람 강퇴 가능, 멤버 초대 가능';
                 } else {
-                    roleInfo = 'Member 권한: 아무도 강퇴 불가 (초대 중 포함)';
+                    roleInfo = 'Member 권한: 조회만 가능 (수정/초대/강퇴 불가)';
                 }
             }
             
@@ -984,6 +1018,33 @@
                     opt.classList.add('selected');
                 }
             });
+            
+            // 권한에 따른 필드 활성화/비활성화
+            const currentUserData = members.find(m => m.nickname === currentUser);
+            const currentUserRole = currentUserData ? currentUserData.role : 'Member';
+            const isLeader = currentUserRole === 'Leader';
+            
+            const nameInput = document.getElementById('workspaceName');
+            const descInput = document.getElementById('workspaceDesc');
+            const colorOptions = document.querySelectorAll('.color-option');
+            
+            if (isLeader) {
+                // Leader는 모든 것을 수정 가능
+                nameInput.removeAttribute('readonly');
+                descInput.removeAttribute('readonly');
+                colorOptions.forEach(opt => {
+                    opt.style.pointerEvents = 'auto';
+                    opt.style.opacity = '1';
+                });
+            } else {
+                // Manager, Member는 워크스페이스 기본 정보 수정 불가
+                nameInput.setAttribute('readonly', 'true');
+                descInput.setAttribute('readonly', 'true');
+                colorOptions.forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                    opt.style.opacity = '0.5';
+                });
+            }
             
             renderMemberList();
             checkForChanges();
