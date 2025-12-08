@@ -1168,6 +1168,16 @@
             const currentUserData = members.find(m => m.nickname === currentUser);
             const currentUserRole = currentUserData ? currentUserData.role : 'Member';
             const isLeader = currentUserRole === 'Leader';
+            
+            // 권한에 따라 초대 폼 표시/숨김 (Member는 초대 못 함)
+            const addMemberForm = document.querySelector('.add-member-form');
+            if (addMemberForm) {
+                if (currentUserRole === 'Leader' || currentUserRole === 'Manager') {
+                    addMemberForm.style.display = 'flex';
+                } else {
+                    addMemberForm.style.display = 'none';
+                }
+            }
 
             // 권한별 아이콘 매핑
             const roleIcons = {
