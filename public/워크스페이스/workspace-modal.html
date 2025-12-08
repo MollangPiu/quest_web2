@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>워크스페이스 생성 모달</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 50px;
+        }
+
+        /* 모달 트리거 버튼 (예시용) */
+        .trigger-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .trigger-btn:hover {
+            background: #357abd;
+        }
+
+        /* 모달 오버레이 */
+        .modal-overlay {
+            display: none; /* 기본적으로 숨김 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 모달 컨테이너 */
+        .modal-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            animation: slideUp 0.3s ease;
+            overflow: hidden;
+            transition: max-width 0.3s ease;
+        }
+
+        .modal-container.wide {
+            max-width: 900px;
+        }
+
+        /* 모달 헤더 */
+        .modal-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        /* 모달 본문 */
+        .modal-body {
+            padding: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group label .required {
+            color: #e74c3c;
+            margin-left: 2px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #4a90e2;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group .helper-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 6px;
+        }
+
+        /* 모달 본문 레이아웃 */
+        .modal-body-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            transition: grid-template-columns 0.3s ease;
+        }
+
+        .modal-body-layout.team-mode {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .workspace-left {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .workspace-right {
+            display: none;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 24px;
+            background: #f9f9f9;
+        }
+
+        .modal-body-layout.team-mode .workspace-right {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .invite-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .invited-member {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s;
+        }
+
+        .invited-member:hover {
+            border-color: #4a90e2;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
+        }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4a90e2;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .member-nickname {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .member-role-select {
+            padding: 6px 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            background: white;
+            color: #666;
+            transition: border-color 0.2s;
+        }
+
+        .member-role-select:focus {
+            border-color: #4a90e2;
+        }
+
+        .member-role-select option {
+            padding: 8px;
+        }
+
+        .member-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .remove-member-btn {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .remove-member-btn:hover {
+            background: #fee;
+        }
+
+        .add-member-form {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-member-form input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .add-member-form input:focus {
+            border-color: #4a90e2;
+        }
+
+        .add-member-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .add-member-btn:hover {
+            background: #357abd;
+        }
+
+        .empty-invite-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .color-selector {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: #333;
+        }
+
+        .color-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* 타입 선택 */
+        .type-selector {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .type-option {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+        }
+
+        .type-option:hover {
+            border-color: #4a90e2;
+            background: #f8fbff;
+        }
+
+        .type-option.selected {
+            border-color: #4a90e2;
+            background: #f0f7ff;
+        }
+
+        .type-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .type-info {
+            flex: 1;
+        }
+
+        .type-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .type-desc {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* 모달 푸터 */
+        .modal-footer {
+            padding: 20px 32px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: #f9f9f9;
+        }
+
+        .modal-footer button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background: white;
+            color: #666;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-cancel:hover {
+            background: #f5f5f5;
+            border-color: #ccc;
+        }
+
+        .btn-create {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background: #357abd;
+        }
+
+        .btn-create:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 애니메이션 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .modal-container {
+                width: 95%;
+                margin: 20px;
+            }
+
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 20px;
+            }
+
+            .modal-body-layout.team-mode {
+                grid-template-columns: 1fr;
+            }
+
+            .type-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 트리거 버튼 (예시용) -->
+    <button class="trigger-btn" onclick="openModal()">
+        📁 개인 워크스페이스 만들기
+    </button>
+
+    <!-- 모달 오버레이 -->
+    <div class="modal-overlay" id="workspaceModal">
+        <div class="modal-container">
+            <!-- 모달 헤더 -->
+            <div class="modal-header">
+                <h2>새 워크스페이스 만들기</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+
+            <!-- 모달 본문 -->
+            <div class="modal-body">
+                <form id="workspaceForm">
+                    <div class="modal-body-layout" id="modalBodyLayout">
+                        <!-- LEFT: 워크스페이스 설정 -->
+                        <div class="workspace-left">
+                            <!-- 워크스페이스 타입 선택 -->
+                            <div class="form-group">
+                                <label>워크스페이스 타입<span class="required">*</span></label>
+                                <div class="type-selector">
+                                    <div class="type-option selected" data-type="personal" onclick="selectType('personal')">
+                                        <div class="type-icon">👤</div>
+                                        <div class="type-info">
+                                            <div class="type-name">개인 워크스페이스</div>
+                                            <div class="type-desc">혼자서 작업하는 공간</div>
+                                        </div>
+                                    </div>
+                                    <div class="type-option" data-type="team" onclick="selectType('team')">
+                                        <div class="type-icon">👥</div>
+                                        <div class="type-info">
+                                            <div class="type-name">팀 워크스페이스</div>
+                                            <div class="type-desc">팀원들과 함께 협업</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 워크스페이스 이름 -->
+                            <div class="form-group">
+                                <label for="workspaceName">
+                                    워크스페이스 이름<span class="required">*</span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="workspaceName" 
+                                    name="workspaceName"
+                                    placeholder="예: 마케팅 프로젝트"
+                                    required
+                                />
+                                <div class="helper-text">워크스페이스를 식별할 수 있는 이름을 입력하세요</div>
+                            </div>
+
+                            <!-- 워크스페이스 설명 -->
+                            <div class="form-group">
+                                <label for="workspaceDesc">
+                                    설명 (선택사항)
+                                </label>
+                                <textarea 
+                                    id="workspaceDesc" 
+                                    name="workspaceDesc"
+                                    placeholder="이 워크스페이스에 대한 간단한 설명을 입력하세요"
+                                ></textarea>
+                            </div>
+
+                            <!-- 색상 선택 -->
+                            <div class="form-group">
+                                <label>테마 색상</label>
+                                <div class="color-selector">
+                                    <div class="color-option selected" style="background: #4a90e2;" data-color="#4a90e2"></div>
+                                    <div class="color-option" style="background: #e74c3c;" data-color="#e74c3c"></div>
+                                    <div class="color-option" style="background: #2ecc71;" data-color="#2ecc71"></div>
+                                    <div class="color-option" style="background: #f39c12;" data-color="#f39c12"></div>
+                                    <div class="color-option" style="background: #9b59b6;" data-color="#9b59b6"></div>
+                                    <div class="color-option" style="background: #1abc9c;" data-color="#1abc9c"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: 멤버 초대 (팀 워크스페이스일 때만 표시) -->
+                        <div class="workspace-right">
+                            <div class="section-title">
+                                <span>👥</span>
+                                <span>멤버 초대</span>
+                            </div>
+                            
+                            <!-- 닉네임 입력 폼 -->
+                            <div class="add-member-form">
+                                <input 
+                                    type="text" 
+                                    id="memberNicknameInput" 
+                                    placeholder="닉네임 입력"
+                                />
+                                <button type="button" class="add-member-btn" onclick="addMember()">
+                                    추가
+                                </button>
+                            </div>
+
+                            <!-- 초대된 멤버 리스트 -->
+                            <div style="margin-top: 16px;">
+                                <div class="invite-list" id="inviteList">
+                                    <div class="empty-invite-state">
+                                        초대할 멤버의<br>닉네임을 입력해주세요
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 모달 푸터 -->
+            <div class="modal-footer">
+                <button class="btn-cancel" type="button" onclick="closeModal()">
+                    취소
+                </button>
+                <button class="btn-create" type="button" onclick="createWorkspace()">
+                    워크스페이스 만들기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedColor = '#4a90e2';
+        let selectedType = 'personal';
+        let invitedMembers = []; // 초대된 멤버 목록
+
+        // 모달 열기
+        function openModal() {
+            const modal = document.getElementById('workspaceModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            const modal = document.getElementById('workspaceModal');
+            const modalContainer = document.querySelector('.modal-container');
+            
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // 스크롤 복원
+            
+            // 폼 초기화
+            document.getElementById('workspaceForm').reset();
+            resetColorSelection();
+            selectType('personal');
+            invitedMembers = [];
+            renderInviteList();
+            
+            // wide 클래스 제거
+            modalContainer.classList.remove('wide');
+        }
+
+        // 오버레이 클릭 시 모달 닫기
+        document.getElementById('workspaceModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // 타입 선택
+        function selectType(type) {
+            selectedType = type;
+            
+            // 모든 타입 옵션 선택 해제
+            document.querySelectorAll('.type-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // 현재 타입 선택
+            document.querySelector(`.type-option[data-type="${type}"]`).classList.add('selected');
+            
+            // LEFT/RIGHT 레이아웃 제어
+            const modalBodyLayout = document.getElementById('modalBodyLayout');
+            const modalContainer = document.querySelector('.modal-container');
+            
+            if (type === 'team') {
+                modalBodyLayout.classList.add('team-mode');
+                modalContainer.classList.add('wide');
+            } else {
+                modalBodyLayout.classList.remove('team-mode');
+                modalContainer.classList.remove('wide');
+            }
+        }
+
+        // 멤버 추가
+        function addMember() {
+            const nicknameInput = document.getElementById('memberNicknameInput');
+            const nickname = nicknameInput.value.trim();
+
+            if (!nickname) {
+                alert('닉네임을 입력해주세요!');
+                return;
+            }
+
+            // 중복 체크 (닉네임 기준)
+            if (invitedMembers.includes(nickname)) {
+                alert('이미 추가된 닉네임입니다!');
+                return;
+            }
+
+            // 멤버 추가
+            invitedMembers.push(nickname);
+            nicknameInput.value = '';
+            nicknameInput.focus();
+            renderInviteList();
+        }
+
+        // 멤버 제거
+        function removeMember(nickname) {
+            invitedMembers = invitedMembers.filter(m => m !== nickname);
+            renderInviteList();
+        }
+
+        // 초대 목록 렌더링
+        function renderInviteList() {
+            const listContainer = document.getElementById('inviteList');
+
+            if (invitedMembers.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-invite-state">
+                        초대할 멤버의<br>닉네임을 입력해주세요
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = invitedMembers.map(nickname => {
+                const initial = nickname.charAt(0).toUpperCase();
+                return `
+                    <div class="invited-member">
+                        <div class="member-info">
+                            <div class="member-avatar">${initial}</div>
+                            <div class="member-nickname">${nickname}</div>
+                        </div>
+                        <button class="remove-member-btn" onclick="removeMember('${nickname}')">
+                            ✕
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Enter 키로 멤버 추가
+        document.addEventListener('DOMContentLoaded', function() {
+            const nicknameInput = document.getElementById('memberNicknameInput');
+            
+            if (nicknameInput) {
+                nicknameInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addMember();
+                    }
+                });
+            }
+        });
+
+        // 색상 선택
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // 모든 선택 해제
+                document.querySelectorAll('.color-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // 현재 항목 선택
+                this.classList.add('selected');
+                selectedColor = this.dataset.color;
+            });
+        });
+
+        function resetColorSelection() {
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.querySelector('.color-option[data-color="#4a90e2"]').classList.add('selected');
+            selectedColor = '#4a90e2';
+        }
+
+        // 워크스페이스 생성
+        function createWorkspace() {
+            const name = document.getElementById('workspaceName').value.trim();
+            const desc = document.getElementById('workspaceDesc').value.trim();
+
+            if (!name) {
+                alert('워크스페이스 이름을 입력해주세요!');
+                document.getElementById('workspaceName').focus();
+                return;
+            }
+
+            // 여기에 실제 워크스페이스 생성 로직을 추가하세요
+            const workspaceData = {
+                name: name,
+                description: desc,
+                color: selectedColor,
+                type: selectedType,
+                teamMembers: selectedType === 'team' ? invitedMembers : [],
+                createdAt: new Date().toISOString()
+            };
+
+            console.log('워크스페이스 생성:', workspaceData);
+            
+            // 성공 메시지
+            const typeText = selectedType === 'personal' ? '개인' : '팀';
+            let successMsg = `${typeText} 워크스페이스 "${name}"가 생성되었습니다! 🎉`;
+            if (selectedType === 'team' && invitedMembers.length > 0) {
+                successMsg += `\n초대된 멤버: ${invitedMembers.join(', ')}`;
+                successMsg += `\n${invitedMembers.length}명이 초대되었습니다.`;
+            }
+            alert(successMsg);
+            
+            // 모달 닫기
+            closeModal();
+
+            // 실제 구현에서는 여기서 API 호출 등을 수행하면 됩니다
+            // fetch('/api/workspace', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(workspaceData)
+            // }).then(response => response.json())
+            //   .then(data => {
+            //       closeModal();
+            //       // 성공 처리
+            //   });
+        }
+
+        // Enter 키 처리
+        document.getElementById('workspaceName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                createWorkspace();
+            }
+        });
+    </script>
+</body>
+</html>
+
