@@ -168,36 +168,24 @@
         .workspace-item {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 16px;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s;
             background: white;
+            min-height: 70px;
         }
 
         .workspace-item:hover {
-            border-color: #4a90e2;
             background: #f8fbff;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .workspace-item.active {
-            border-color: #4a90e2;
             background: #f0f7ff;
-        }
-
-        .workspace-color {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-right: 16px;
         }
 
         .workspace-info {
@@ -210,6 +198,9 @@
             font-weight: 600;
             color: #333;
             margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .workspace-desc {
@@ -222,9 +213,10 @@
 
         .workspace-meta {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
-            margin-right: 12px;
+            margin-right: 8px;
+            flex-shrink: 0;
         }
 
         .workspace-count {
@@ -233,28 +225,9 @@
             background: #f0f0f0;
             padding: 4px 10px;
             border-radius: 12px;
+            white-space: nowrap;
         }
 
-        .workspace-type {
-            font-size: 12px;
-            color: #666;
-            background: #e8f4fd;
-            padding: 4px 10px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .workspace-type.team {
-            background: #fff4e6;
-            color: #e67e22;
-        }
-
-        .workspace-type.personal {
-            background: #e8f4fd;
-            color: #3498db;
-        }
 
         .workspace-date {
             font-size: 12px;
@@ -282,17 +255,31 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
+            transition: all 0.2s;
             font-size: 18px;
+            color: #666;
         }
 
         .action-btn:hover {
             background: #e0e0e0;
         }
 
+        .action-btn.edit {
+            color: #4a90e2;
+        }
+
+        .action-btn.edit:hover {
+            background: #e8f4fd;
+            color: #357abd;
+        }
+
+        .action-btn.delete {
+            color: #e74c3c;
+        }
+
         .action-btn.delete:hover {
             background: #fee;
-            color: #e74c3c;
+            color: #c0392b;
         }
 
         /* 빈 상태 */
@@ -300,12 +287,6 @@
             text-align: center;
             padding: 60px 20px;
             color: #999;
-        }
-
-        .empty-state-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-            opacity: 0.5;
         }
 
         .empty-state-text {
@@ -366,6 +347,153 @@
             }
         }
 
+        /* 삭제 확인 모달 */
+        .delete-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .delete-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .delete-modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            width: 90%;
+            max-width: 420px;
+            animation: slideUp 0.2s ease;
+            overflow: hidden;
+        }
+
+        .delete-header {
+            padding: 24px 24px 16px;
+            text-align: center;
+        }
+
+        .delete-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .delete-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .delete-message {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .delete-workspace-name {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .delete-role {
+            font-size: 14px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .delete-role span {
+            color: #4a90e2;
+            font-weight: 600;
+        }
+
+        .delete-password-section {
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .delete-password-label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .delete-password-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .delete-password-input:focus {
+            border-color: #4a90e2;
+        }
+
+        .delete-password-error {
+            font-size: 12px;
+            color: #e74c3c;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .delete-password-error.show {
+            display: block;
+        }
+
+        .delete-footer {
+            padding: 16px 24px 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .delete-footer button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .btn-delete:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
         /* 반응형 */
         @media (max-width: 600px) {
             .modal-container {
@@ -399,7 +527,7 @@
 <body>
     <!-- 트리거 버튼 -->
     <button class="trigger-btn" onclick="openModal()">
-        📂 내 워크스페이스 보기
+        내 워크스페이스 보기
     </button>
 
     <!-- 모달 오버레이 -->
@@ -410,7 +538,6 @@
                 <h2>내 워크스페이스</h2>
                 <div class="header-actions">
                     <button class="add-btn" onclick="addNewWorkspace()">
-                        <span>➕</span>
                         <span>새로 만들기</span>
                     </button>
                     <button class="close-btn" onclick="closeModal()">&times;</button>
@@ -435,7 +562,6 @@
 
                 <!-- 빈 상태 (검색 결과 없을 때) -->
                 <div class="empty-state" id="emptyState" style="display: none;">
-                    <div class="empty-state-icon">🔍</div>
                     <div class="empty-state-text">워크스페이스를 찾을 수 없습니다</div>
                     <div class="empty-state-subtext">다른 검색어를 시도해보세요</div>
                 </div>
@@ -453,6 +579,39 @@
         </div>
     </div>
 
+    <!-- 삭제 확인 모달 -->
+    <div class="delete-overlay" id="deleteConfirmModal">
+        <div class="delete-modal">
+            <div class="delete-header">
+                <div class="delete-icon">⚠️</div>
+                <div class="delete-title">워크스페이스 삭제</div>
+                <div class="delete-message">
+                    '<span class="delete-workspace-name" id="deleteWorkspaceName"></span>' 삭제하시겠습니까?
+                </div>
+                <div class="delete-role">
+                    현재 권한: <span id="deleteUserRole"></span>
+                </div>
+            </div>
+            <div class="delete-password-section" id="deletePasswordSection" style="display: none;">
+                <div class="delete-password-label">비밀번호를 입력하세요</div>
+                <input 
+                    type="password" 
+                    class="delete-password-input" 
+                    id="deletePasswordInput"
+                    placeholder="비밀번호 입력"
+                    onkeypress="if(event.key === 'Enter') confirmDelete()"
+                />
+                <div class="delete-password-error" id="deletePasswordError">
+                    비밀번호가 일치하지 않습니다.
+                </div>
+            </div>
+            <div class="delete-footer">
+                <button class="btn-cancel" onclick="closeDeleteModal()">취소</button>
+                <button class="btn-delete" id="deleteConfirmBtn" onclick="confirmDelete()">삭제</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 샘플 데이터
         let workspaces = [
@@ -461,7 +620,6 @@
                 name: '마케팅 프로젝트',
                 description: '2024 신제품 마케팅 캠페인 관련 작업',
                 color: '#4a90e2',
-                icon: '📊',
                 type: 'personal',
                 questCount: 15,
                 memberCount: 1,
@@ -473,7 +631,6 @@
                 name: '개발팀 협업',
                 description: '웹사이트 리뉴얼 프로젝트',
                 color: '#e74c3c',
-                icon: '💻',
                 type: 'team',
                 questCount: 23,
                 memberCount: 5,
@@ -482,10 +639,9 @@
             },
             {
                 id: 3,
-                name: '디자인 시스템',
-                description: 'UI/UX 디자인 가이드라인 및 컴포넌트',
+                name: '서울 스마트시티 AI 디자인 혁신 프로젝트 2025 - 시민 중심 스마트 서비스 플랫폼',
+                description: '서울시 공공 서비스 디지털 전환을 위한 AI 기반 디자인 시스템 구축 및 사용자 경험 개선 프로젝트로, 시민 중심의 접근성을 고려한 UI/UX 디자인 가이드라인 및 컴포넌트 라이브러리 개발',
                 color: '#9b59b6',
-                icon: '🎨',
                 type: 'team',
                 questCount: 8,
                 memberCount: 3,
@@ -497,7 +653,6 @@
                 name: '고객 피드백',
                 description: '사용자 의견 수집 및 개선사항',
                 color: '#2ecc71',
-                icon: '💬',
                 type: 'personal',
                 questCount: 32,
                 memberCount: 1,
@@ -509,7 +664,6 @@
                 name: '연구 개발',
                 description: 'AI 기술 연구 및 POC',
                 color: '#f39c12',
-                icon: '🔬',
                 type: 'team',
                 questCount: 12,
                 memberCount: 8,
@@ -521,7 +675,6 @@
                 name: '영업 지원',
                 description: '영업 자료 및 제안서 관리',
                 color: '#1abc9c',
-                icon: '📈',
                 type: 'personal',
                 questCount: 19,
                 memberCount: 1,
@@ -531,6 +684,12 @@
         ];
 
         let allWorkspaces = [...workspaces];
+        
+        // 현재 사용자 권한 (테스트용 - 실제로는 서버에서 가져와야 함)
+        const currentUserRole = 'Leader'; // 'Leader', 'Manager', 'Member'
+        
+        // 삭제할 워크스페이스 ID 저장
+        let workspaceToDelete = null;
 
         // 모달 열기
         function openModal() {
@@ -579,30 +738,25 @@
             countElement.textContent = workspacesToRender.length;
 
             listContainer.innerHTML = workspacesToRender.map(ws => {
-                const typeLabel = ws.type === 'personal' ? '👤 개인' : '👥 팀';
                 const memberInfo = ws.type === 'team' ? `멤버 ${ws.memberCount}명` : '';
                 
                 return `
-                <div class="workspace-item ${ws.active ? 'active' : ''}" onclick="selectWorkspace(${ws.id})">
-                    <div class="workspace-color" style="background: ${ws.color};">
-                        ${ws.icon}
-                    </div>
+                <div class="workspace-item ${ws.active ? 'active' : ''}" onclick="selectWorkspace(${ws.id})" style="border-color: ${ws.color};">
                     <div class="workspace-info">
                         <div class="workspace-name">${ws.name}</div>
                         <div class="workspace-desc">${ws.description}</div>
                     </div>
                     <div class="workspace-meta">
-                        <div class="workspace-type ${ws.type}">${typeLabel}</div>
                         ${ws.type === 'team' ? `<div class="workspace-count">${memberInfo}</div>` : ''}
                         <div class="workspace-count">퀘스트 ${ws.questCount}개</div>
                         <div class="workspace-date">${formatDate(ws.createdAt)}</div>
                     </div>
                     <div class="workspace-actions">
-                        <button class="action-btn" onclick="editWorkspace(event, ${ws.id})" title="편집">
-                            ✏️
+                        <button class="action-btn edit" onclick="editWorkspace(event, ${ws.id})" title="편집">
+                            ✐
                         </button>
                         <button class="action-btn delete" onclick="deleteWorkspace(event, ${ws.id})" title="삭제">
-                            🗑️
+                            ✕
                         </button>
                     </div>
                 </div>
@@ -645,18 +799,112 @@
             alert(`"${workspace.name}" 편집 기능 (여기에 편집 모달 연결)`);
         }
 
-        // 워크스페이스 삭제
+        // 워크스페이스 삭제 확인 모달 열기
         function deleteWorkspace(event, id) {
             event.stopPropagation();
             const workspace = workspaces.find(ws => ws.id === id);
+            workspaceToDelete = id;
             
-            if (confirm(`"${workspace.name}" 워크스페이스를 삭제하시겠습니까?`)) {
-                workspaces = workspaces.filter(ws => ws.id !== id);
-                allWorkspaces = [...workspaces];
-                renderWorkspaces(workspaces);
-                console.log('삭제됨:', workspace);
+            const modal = document.getElementById('deleteConfirmModal');
+            const workspaceNameEl = document.getElementById('deleteWorkspaceName');
+            const userRoleEl = document.getElementById('deleteUserRole');
+            const passwordSection = document.getElementById('deletePasswordSection');
+            const passwordInput = document.getElementById('deletePasswordInput');
+            const passwordError = document.getElementById('deletePasswordError');
+            const deleteBtn = document.getElementById('deleteConfirmBtn');
+            
+            workspaceNameEl.textContent = workspace.name;
+            userRoleEl.textContent = currentUserRole;
+            
+            // Leader일 경우 비밀번호 입력 섹션 표시
+            if (currentUserRole === 'Leader') {
+                passwordSection.style.display = 'block';
+                passwordInput.value = '';
+                passwordError.classList.remove('show');
+                deleteBtn.disabled = true;
+                setTimeout(() => passwordInput.focus(), 100);
+            } else {
+                passwordSection.style.display = 'none';
+                deleteBtn.disabled = false;
             }
+            
+            modal.classList.add('active');
         }
+        
+        // 삭제 확인 모달 닫기
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteConfirmModal');
+            const passwordInput = document.getElementById('deletePasswordInput');
+            const passwordError = document.getElementById('deletePasswordError');
+            
+            modal.classList.remove('active');
+            passwordInput.value = '';
+            passwordError.classList.remove('show');
+            workspaceToDelete = null;
+        }
+        
+        // 삭제 확인 및 실행
+        function confirmDelete() {
+            if (!workspaceToDelete) return;
+            
+            const workspace = workspaces.find(ws => ws.id === workspaceToDelete);
+            const passwordInput = document.getElementById('deletePasswordInput');
+            const passwordError = document.getElementById('deletePasswordError');
+            
+            // Leader일 경우 비밀번호 확인
+            if (currentUserRole === 'Leader') {
+                const password = passwordInput.value;
+                // 실제로는 서버에서 비밀번호를 확인해야 함
+                // 여기서는 테스트용으로 'password123'으로 설정
+                if (password !== 'password123') {
+                    passwordError.classList.add('show');
+                    passwordInput.focus();
+                    return;
+                }
+            }
+            
+            // 삭제 실행
+            workspaces = workspaces.filter(ws => ws.id !== workspaceToDelete);
+            allWorkspaces = [...workspaces];
+            renderWorkspaces(workspaces);
+            console.log('삭제됨:', workspace);
+            
+            closeDeleteModal();
+        }
+        
+        // 비밀번호 입력 시 삭제 버튼 활성화
+        const passwordInput = document.getElementById('deletePasswordInput');
+        const deleteBtn = document.getElementById('deleteConfirmBtn');
+        
+        if (passwordInput && deleteBtn) {
+            passwordInput.addEventListener('input', function() {
+                if (this.value.length > 0) {
+                    deleteBtn.disabled = false;
+                } else {
+                    deleteBtn.disabled = true;
+                }
+            });
+        }
+        
+        // 삭제 모달 오버레이 클릭 시 모달 닫기
+        const deleteModal = document.getElementById('deleteConfirmModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeDeleteModal();
+                }
+            });
+        }
+        
+        // ESC 키로 삭제 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const deleteModal = document.getElementById('deleteConfirmModal');
+                if (deleteModal && deleteModal.classList.contains('active')) {
+                    closeDeleteModal();
+                }
+            }
+        });
 
         // 새 워크스페이스 추가
         function addNewWorkspace() {
