@@ -347,6 +347,153 @@
             }
         }
 
+        /* 삭제 확인 모달 */
+        .delete-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .delete-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .delete-modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            width: 90%;
+            max-width: 420px;
+            animation: slideUp 0.2s ease;
+            overflow: hidden;
+        }
+
+        .delete-header {
+            padding: 24px 24px 16px;
+            text-align: center;
+        }
+
+        .delete-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .delete-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .delete-message {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .delete-workspace-name {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .delete-role {
+            font-size: 14px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .delete-role span {
+            color: #4a90e2;
+            font-weight: 600;
+        }
+
+        .delete-password-section {
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .delete-password-label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .delete-password-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .delete-password-input:focus {
+            border-color: #4a90e2;
+        }
+
+        .delete-password-error {
+            font-size: 12px;
+            color: #e74c3c;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .delete-password-error.show {
+            display: block;
+        }
+
+        .delete-footer {
+            padding: 16px 24px 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .delete-footer button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .btn-delete:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
         /* 반응형 */
         @media (max-width: 600px) {
             .modal-container {
@@ -432,6 +579,39 @@
         </div>
     </div>
 
+    <!-- 삭제 확인 모달 -->
+    <div class="delete-overlay" id="deleteConfirmModal">
+        <div class="delete-modal">
+            <div class="delete-header">
+                <div class="delete-icon">⚠️</div>
+                <div class="delete-title">워크스페이스 삭제</div>
+                <div class="delete-message">
+                    '<span class="delete-workspace-name" id="deleteWorkspaceName"></span>' 삭제하시겠습니까?
+                </div>
+                <div class="delete-role">
+                    현재 권한: <span id="deleteUserRole"></span>
+                </div>
+            </div>
+            <div class="delete-password-section" id="deletePasswordSection" style="display: none;">
+                <div class="delete-password-label">비밀번호를 입력하세요</div>
+                <input 
+                    type="password" 
+                    class="delete-password-input" 
+                    id="deletePasswordInput"
+                    placeholder="비밀번호 입력"
+                    onkeypress="if(event.key === 'Enter') confirmDelete()"
+                />
+                <div class="delete-password-error" id="deletePasswordError">
+                    비밀번호가 일치하지 않습니다.
+                </div>
+            </div>
+            <div class="delete-footer">
+                <button class="btn-cancel" onclick="closeDeleteModal()">취소</button>
+                <button class="btn-delete" id="deleteConfirmBtn" onclick="confirmDelete()">삭제</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 샘플 데이터
         let workspaces = [
@@ -504,6 +684,12 @@
         ];
 
         let allWorkspaces = [...workspaces];
+        
+        // 현재 사용자 권한 (테스트용 - 실제로는 서버에서 가져와야 함)
+        const currentUserRole = 'Leader'; // 'Leader', 'Manager', 'Member'
+        
+        // 삭제할 워크스페이스 ID 저장
+        let workspaceToDelete = null;
 
         // 모달 열기
         function openModal() {
@@ -613,18 +799,112 @@
             alert(`"${workspace.name}" 편집 기능 (여기에 편집 모달 연결)`);
         }
 
-        // 워크스페이스 삭제
+        // 워크스페이스 삭제 확인 모달 열기
         function deleteWorkspace(event, id) {
             event.stopPropagation();
             const workspace = workspaces.find(ws => ws.id === id);
+            workspaceToDelete = id;
             
-            if (confirm(`"${workspace.name}" 워크스페이스를 삭제하시겠습니까?`)) {
-                workspaces = workspaces.filter(ws => ws.id !== id);
-                allWorkspaces = [...workspaces];
-                renderWorkspaces(workspaces);
-                console.log('삭제됨:', workspace);
+            const modal = document.getElementById('deleteConfirmModal');
+            const workspaceNameEl = document.getElementById('deleteWorkspaceName');
+            const userRoleEl = document.getElementById('deleteUserRole');
+            const passwordSection = document.getElementById('deletePasswordSection');
+            const passwordInput = document.getElementById('deletePasswordInput');
+            const passwordError = document.getElementById('deletePasswordError');
+            const deleteBtn = document.getElementById('deleteConfirmBtn');
+            
+            workspaceNameEl.textContent = workspace.name;
+            userRoleEl.textContent = currentUserRole;
+            
+            // Leader일 경우 비밀번호 입력 섹션 표시
+            if (currentUserRole === 'Leader') {
+                passwordSection.style.display = 'block';
+                passwordInput.value = '';
+                passwordError.classList.remove('show');
+                deleteBtn.disabled = true;
+                setTimeout(() => passwordInput.focus(), 100);
+            } else {
+                passwordSection.style.display = 'none';
+                deleteBtn.disabled = false;
             }
+            
+            modal.classList.add('active');
         }
+        
+        // 삭제 확인 모달 닫기
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteConfirmModal');
+            const passwordInput = document.getElementById('deletePasswordInput');
+            const passwordError = document.getElementById('deletePasswordError');
+            
+            modal.classList.remove('active');
+            passwordInput.value = '';
+            passwordError.classList.remove('show');
+            workspaceToDelete = null;
+        }
+        
+        // 삭제 확인 및 실행
+        function confirmDelete() {
+            if (!workspaceToDelete) return;
+            
+            const workspace = workspaces.find(ws => ws.id === workspaceToDelete);
+            const passwordInput = document.getElementById('deletePasswordInput');
+            const passwordError = document.getElementById('deletePasswordError');
+            
+            // Leader일 경우 비밀번호 확인
+            if (currentUserRole === 'Leader') {
+                const password = passwordInput.value;
+                // 실제로는 서버에서 비밀번호를 확인해야 함
+                // 여기서는 테스트용으로 'password123'으로 설정
+                if (password !== 'password123') {
+                    passwordError.classList.add('show');
+                    passwordInput.focus();
+                    return;
+                }
+            }
+            
+            // 삭제 실행
+            workspaces = workspaces.filter(ws => ws.id !== workspaceToDelete);
+            allWorkspaces = [...workspaces];
+            renderWorkspaces(workspaces);
+            console.log('삭제됨:', workspace);
+            
+            closeDeleteModal();
+        }
+        
+        // 비밀번호 입력 시 삭제 버튼 활성화
+        const passwordInput = document.getElementById('deletePasswordInput');
+        const deleteBtn = document.getElementById('deleteConfirmBtn');
+        
+        if (passwordInput && deleteBtn) {
+            passwordInput.addEventListener('input', function() {
+                if (this.value.length > 0) {
+                    deleteBtn.disabled = false;
+                } else {
+                    deleteBtn.disabled = true;
+                }
+            });
+        }
+        
+        // 삭제 모달 오버레이 클릭 시 모달 닫기
+        const deleteModal = document.getElementById('deleteConfirmModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeDeleteModal();
+                }
+            });
+        }
+        
+        // ESC 키로 삭제 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const deleteModal = document.getElementById('deleteConfirmModal');
+                if (deleteModal && deleteModal.classList.contains('active')) {
+                    closeDeleteModal();
+                }
+            }
+        });
 
         // 새 워크스페이스 추가
         function addNewWorkspace() {
