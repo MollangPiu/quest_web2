@@ -177,14 +177,12 @@
         }
 
         .workspace-item:hover {
-            border-color: #4a90e2;
             background: #f8fbff;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .workspace-item.active {
-            border-color: #4a90e2;
             background: #f0f7ff;
         }
 
@@ -198,6 +196,8 @@
             justify-content: center;
             font-size: 24px;
             margin-right: 16px;
+            color: white;
+            font-weight: 600;
         }
 
         .workspace-info {
@@ -282,17 +282,31 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
+            transition: all 0.2s;
             font-size: 18px;
+            color: #666;
         }
 
         .action-btn:hover {
             background: #e0e0e0;
         }
 
+        .action-btn.edit {
+            color: #4a90e2;
+        }
+
+        .action-btn.edit:hover {
+            background: #e8f4fd;
+            color: #357abd;
+        }
+
+        .action-btn.delete {
+            color: #e74c3c;
+        }
+
         .action-btn.delete:hover {
             background: #fee;
-            color: #e74c3c;
+            color: #c0392b;
         }
 
         /* 빈 상태 */
@@ -300,12 +314,6 @@
             text-align: center;
             padding: 60px 20px;
             color: #999;
-        }
-
-        .empty-state-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-            opacity: 0.5;
         }
 
         .empty-state-text {
@@ -399,7 +407,7 @@
 <body>
     <!-- 트리거 버튼 -->
     <button class="trigger-btn" onclick="openModal()">
-        📂 내 워크스페이스 보기
+        내 워크스페이스 보기
     </button>
 
     <!-- 모달 오버레이 -->
@@ -410,7 +418,6 @@
                 <h2>내 워크스페이스</h2>
                 <div class="header-actions">
                     <button class="add-btn" onclick="addNewWorkspace()">
-                        <span>➕</span>
                         <span>새로 만들기</span>
                     </button>
                     <button class="close-btn" onclick="closeModal()">&times;</button>
@@ -435,7 +442,6 @@
 
                 <!-- 빈 상태 (검색 결과 없을 때) -->
                 <div class="empty-state" id="emptyState" style="display: none;">
-                    <div class="empty-state-icon">🔍</div>
                     <div class="empty-state-text">워크스페이스를 찾을 수 없습니다</div>
                     <div class="empty-state-subtext">다른 검색어를 시도해보세요</div>
                 </div>
@@ -461,7 +467,6 @@
                 name: '마케팅 프로젝트',
                 description: '2024 신제품 마케팅 캠페인 관련 작업',
                 color: '#4a90e2',
-                icon: '📊',
                 type: 'personal',
                 questCount: 15,
                 memberCount: 1,
@@ -473,7 +478,6 @@
                 name: '개발팀 협업',
                 description: '웹사이트 리뉴얼 프로젝트',
                 color: '#e74c3c',
-                icon: '💻',
                 type: 'team',
                 questCount: 23,
                 memberCount: 5,
@@ -485,7 +489,6 @@
                 name: '디자인 시스템',
                 description: 'UI/UX 디자인 가이드라인 및 컴포넌트',
                 color: '#9b59b6',
-                icon: '🎨',
                 type: 'team',
                 questCount: 8,
                 memberCount: 3,
@@ -497,7 +500,6 @@
                 name: '고객 피드백',
                 description: '사용자 의견 수집 및 개선사항',
                 color: '#2ecc71',
-                icon: '💬',
                 type: 'personal',
                 questCount: 32,
                 memberCount: 1,
@@ -509,7 +511,6 @@
                 name: '연구 개발',
                 description: 'AI 기술 연구 및 POC',
                 color: '#f39c12',
-                icon: '🔬',
                 type: 'team',
                 questCount: 12,
                 memberCount: 8,
@@ -521,7 +522,6 @@
                 name: '영업 지원',
                 description: '영업 자료 및 제안서 관리',
                 color: '#1abc9c',
-                icon: '📈',
                 type: 'personal',
                 questCount: 19,
                 memberCount: 1,
@@ -579,13 +579,13 @@
             countElement.textContent = workspacesToRender.length;
 
             listContainer.innerHTML = workspacesToRender.map(ws => {
-                const typeLabel = ws.type === 'personal' ? '👤 개인' : '👥 팀';
+                const typeLabel = ws.type === 'personal' ? '개인' : '팀';
                 const memberInfo = ws.type === 'team' ? `멤버 ${ws.memberCount}명` : '';
                 
                 return `
-                <div class="workspace-item ${ws.active ? 'active' : ''}" onclick="selectWorkspace(${ws.id})">
+                <div class="workspace-item ${ws.active ? 'active' : ''}" onclick="selectWorkspace(${ws.id})" style="border-color: ${ws.color};">
                     <div class="workspace-color" style="background: ${ws.color};">
-                        ${ws.icon}
+                        ${ws.name.charAt(0)}
                     </div>
                     <div class="workspace-info">
                         <div class="workspace-name">${ws.name}</div>
@@ -598,11 +598,11 @@
                         <div class="workspace-date">${formatDate(ws.createdAt)}</div>
                     </div>
                     <div class="workspace-actions">
-                        <button class="action-btn" onclick="editWorkspace(event, ${ws.id})" title="편집">
-                            ✏️
+                        <button class="action-btn edit" onclick="editWorkspace(event, ${ws.id})" title="편집">
+                            ✐
                         </button>
                         <button class="action-btn delete" onclick="deleteWorkspace(event, ${ws.id})" title="삭제">
-                            🗑️
+                            ✕
                         </button>
                     </div>
                 </div>
