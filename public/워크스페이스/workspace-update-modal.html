@@ -140,6 +140,13 @@
             border-color: #4a90e2;
         }
 
+        .form-group input[readonly],
+        .form-group textarea[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+            color: #666;
+        }
+
         .form-group textarea {
             resize: vertical;
             min-height: 100px;
@@ -619,6 +626,22 @@
             background: #c0392b;
         }
 
+        .password-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .password-input:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
         /* 토스트 알림 */
         .toast {
             position: fixed;
@@ -783,6 +806,41 @@
         </div>
     </div>
 
+    <!-- 비밀번호 확인 모달 (Leader 권한 부여용) -->
+    <div class="confirm-overlay" id="passwordModal">
+        <div class="confirm-modal">
+            <div class="confirm-header">
+                <div class="confirm-icon">🔐</div>
+                <div class="confirm-title">Leader 권한 부여</div>
+                <div class="confirm-message">
+                    <span class="confirm-member-name" id="passwordMemberName"></span>님에게<br>
+                    Leader 권한을 부여하시겠습니까?<br>
+                    <small style="color: #e74c3c; font-size: 13px; margin-top: 8px; display: block; font-weight: 600;">
+                        ⚠️ 이는 매우 중요한 권한입니다
+                    </small>
+                </div>
+                <div style="margin-top: 20px;">
+                    <input 
+                        type="password" 
+                        id="leaderPasswordInput" 
+                        placeholder="비밀번호를 입력하세요"
+                        class="password-input"
+                    />
+                    <div id="passwordError" style="color: #e74c3c; font-size: 13px; margin-top: 8px; display: none; font-weight: 500;">
+                        비밀번호가 일치하지 않습니다.
+                    </div>
+                    <div style="color: #999; font-size: 12px; margin-top: 8px;">
+                        💡 테스트용 비밀번호: 1234
+                    </div>
+                </div>
+            </div>
+            <div class="confirm-footer">
+                <button class="btn-no" onclick="closePasswordModal()">취소</button>
+                <button class="btn-yes" onclick="confirmLeaderChange()">확인</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 모달 오버레이 -->
     <div class="modal-overlay" id="workspaceUpdateModal">
         <div class="modal-container">
@@ -889,6 +947,7 @@
     <script>
         let selectedColor = '#4a90e2';
         let currentUser = '아리랑'; // 현재 로그인한 사용자
+        const LEADER_PASSWORD = '1234'; // Leader 권한 부여 시 필요한 비밀번호 (실제로는 서버에서 검증)
         
         // 원본 데이터 (서버에서 가져온 데이터)
         let originalData = {
@@ -909,6 +968,7 @@
         let memberToRemove = null;
         let toastTimeout = null;
         let hasChanges = false; // 변경사항 여부
+        let pendingRoleChange = null; // 비밀번호 확인 대기 중인 권한 변경 정보
 
         // 권한 테스트용 - 사용자 전환
         function toggleUser() {
@@ -920,17 +980,44 @@
                 currentUser = '아리랑'; // Leader 권한
             }
             document.getElementById('currentUserDisplay').textContent = currentUser;
+            
+            // 권한에 따른 필드 활성화/비활성화
+            const userData = members.find(m => m.nickname === currentUser);
+            const currentUserRole = userData ? userData.role : 'Member';
+            const isLeader = currentUserRole === 'Leader';
+            
+            const nameInput = document.getElementById('workspaceName');
+            const descInput = document.getElementById('workspaceDesc');
+            const colorOptions = document.querySelectorAll('.color-option');
+            
+            if (isLeader) {
+                // Leader는 모든 것을 수정 가능
+                nameInput.removeAttribute('readonly');
+                descInput.removeAttribute('readonly');
+                colorOptions.forEach(opt => {
+                    opt.style.pointerEvents = 'auto';
+                    opt.style.opacity = '1';
+                });
+            } else {
+                // Manager, Member는 워크스페이스 기본 정보 수정 불가
+                nameInput.setAttribute('readonly', 'true');
+                descInput.setAttribute('readonly', 'true');
+                colorOptions.forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                    opt.style.opacity = '0.5';
+                });
+            }
+            
             renderMemberList();
             
             let roleInfo = '';
-            const userData = members.find(m => m.nickname === currentUser);
             if (userData) {
                 if (userData.role === 'Leader') {
-                    roleInfo = 'Leader 권한: 모든 멤버 강퇴 가능 (Manager, Member, 초대 중)';
+                    roleInfo = 'Leader 권한: 워크스페이스 정보 수정 가능, 모든 멤버 강퇴 가능';
                 } else if (userData.role === 'Manager') {
-                    roleInfo = 'Manager 권한: Member 및 초대 중인 사람 강퇴 가능';
+                    roleInfo = 'Manager 권한: Member 및 초대 중인 사람 강퇴 가능, 멤버 초대 가능';
                 } else {
-                    roleInfo = 'Member 권한: 아무도 강퇴 불가 (초대 중 포함)';
+                    roleInfo = 'Member 권한: 조회만 가능 (수정/초대/강퇴 불가)';
                 }
             }
             
@@ -985,6 +1072,33 @@
                 }
             });
             
+            // 권한에 따른 필드 활성화/비활성화
+            const currentUserData = members.find(m => m.nickname === currentUser);
+            const currentUserRole = currentUserData ? currentUserData.role : 'Member';
+            const isLeader = currentUserRole === 'Leader';
+            
+            const nameInput = document.getElementById('workspaceName');
+            const descInput = document.getElementById('workspaceDesc');
+            const colorOptions = document.querySelectorAll('.color-option');
+            
+            if (isLeader) {
+                // Leader는 모든 것을 수정 가능
+                nameInput.removeAttribute('readonly');
+                descInput.removeAttribute('readonly');
+                colorOptions.forEach(opt => {
+                    opt.style.pointerEvents = 'auto';
+                    opt.style.opacity = '1';
+                });
+            } else {
+                // Manager, Member는 워크스페이스 기본 정보 수정 불가
+                nameInput.setAttribute('readonly', 'true');
+                descInput.setAttribute('readonly', 'true');
+                colorOptions.forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                    opt.style.opacity = '0.5';
+                });
+            }
+            
             renderMemberList();
             checkForChanges();
         }
@@ -1016,8 +1130,12 @@
         // ESC 키로 모달 닫기
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
+                const passwordModal = document.getElementById('passwordModal');
                 const confirmModal = document.getElementById('confirmModal');
-                if (confirmModal.classList.contains('active')) {
+                
+                if (passwordModal.classList.contains('active')) {
+                    closePasswordModal();
+                } else if (confirmModal.classList.contains('active')) {
                     closeConfirmModal();
                 } else {
                     closeModal();
@@ -1029,6 +1147,13 @@
         document.getElementById('confirmModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeConfirmModal();
+            }
+        });
+
+        // 비밀번호 모달 오버레이 클릭 시 닫기
+        document.getElementById('passwordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePasswordModal();
             }
         });
 
@@ -1097,6 +1222,80 @@
             memberToRemove = null;
         }
 
+        // 비밀번호 모달 열기
+        function openPasswordModal(memberIndex, newRole) {
+            const member = members[memberIndex];
+            pendingRoleChange = { index: memberIndex, role: newRole };
+            
+            document.getElementById('passwordMemberName').textContent = member.nickname;
+            document.getElementById('leaderPasswordInput').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            document.getElementById('passwordModal').classList.add('active');
+            
+            // 포커스를 비밀번호 입력란으로
+            setTimeout(() => {
+                document.getElementById('leaderPasswordInput').focus();
+            }, 100);
+        }
+
+        // 비밀번호 모달 닫기
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            
+            // 권한 변경 취소 - 원래 권한으로 되돌리기
+            if (pendingRoleChange) {
+                const selectElement = document.querySelector(`select[onchange*="updateMemberRole(${pendingRoleChange.index}"]`);
+                if (selectElement) {
+                    selectElement.value = members[pendingRoleChange.index].role;
+                }
+            }
+            
+            pendingRoleChange = null;
+            document.getElementById('leaderPasswordInput').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+        }
+
+        // Leader 권한 부여 확인
+        function confirmLeaderChange() {
+            const inputPassword = document.getElementById('leaderPasswordInput').value;
+            const errorDiv = document.getElementById('passwordError');
+            
+            if (!inputPassword) {
+                errorDiv.textContent = '비밀번호를 입력해주세요.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // 비밀번호 확인 (실제로는 서버에서 검증해야 함)
+            if (inputPassword === LEADER_PASSWORD) {
+                // 비밀번호 맞음 - 권한 변경 진행
+                if (pendingRoleChange) {
+                    const { index, role } = pendingRoleChange;
+                    const oldRole = members[index].role;
+                    members[index].role = role;
+                    checkForChanges();
+                    
+                    const roleIcons = {
+                        'Leader': '👑',
+                        'Manager': '⚙️',
+                        'Member': '👤'
+                    };
+                    
+                    closePasswordModal();
+                    
+                    setTimeout(() => {
+                        showToast('success', '👑', 'Leader 권한 부여됨', `"${members[index].nickname}"님에게 Leader 권한이 부여될 예정입니다. 저장 버튼을 눌러 확정하세요.`, 3000);
+                    }, 300);
+                }
+            } else {
+                // 비밀번호 틀림
+                errorDiv.textContent = '비밀번호가 일치하지 않습니다.';
+                errorDiv.style.display = 'block';
+                document.getElementById('leaderPasswordInput').value = '';
+                document.getElementById('leaderPasswordInput').focus();
+            }
+        }
+
         // 실제 멤버 제거 실행
         function confirmRemoveMember() {
             if (memberToRemove) {
@@ -1125,6 +1324,14 @@
         // 권한 변경
         function updateMemberRole(index, newRole) {
             const oldRole = members[index].role;
+            
+            // Leader 권한으로 변경하려는 경우 비밀번호 확인 필요
+            if (newRole === 'Leader' && oldRole !== 'Leader') {
+                openPasswordModal(index, newRole);
+                return;
+            }
+            
+            // Manager나 Member로 변경하는 경우는 바로 처리
             members[index].role = newRole;
             checkForChanges();
             
@@ -1168,6 +1375,16 @@
             const currentUserData = members.find(m => m.nickname === currentUser);
             const currentUserRole = currentUserData ? currentUserData.role : 'Member';
             const isLeader = currentUserRole === 'Leader';
+            
+            // 권한에 따라 초대 폼 표시/숨김 (Member는 초대 못 함)
+            const addMemberForm = document.querySelector('.add-member-form');
+            if (addMemberForm) {
+                if (currentUserRole === 'Leader' || currentUserRole === 'Manager') {
+                    addMemberForm.style.display = 'flex';
+                } else {
+                    addMemberForm.style.display = 'none';
+                }
+            }
 
             // 권한별 아이콘 매핑
             const roleIcons = {
@@ -1241,12 +1458,23 @@
             const nicknameInput = document.getElementById('memberNicknameInput');
             const nameInput = document.getElementById('workspaceName');
             const descInput = document.getElementById('workspaceDesc');
+            const passwordInput = document.getElementById('leaderPasswordInput');
             
             if (nicknameInput) {
                 nicknameInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         addMember();
+                    }
+                });
+            }
+
+            // 비밀번호 입력란에서 Enter 키 처리
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        confirmLeaderChange();
                     }
                 });
             }
