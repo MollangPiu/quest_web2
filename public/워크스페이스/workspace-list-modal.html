@@ -168,12 +168,14 @@
         .workspace-item {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 16px;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s;
             background: white;
+            min-height: 70px;
         }
 
         .workspace-item:hover {
@@ -184,20 +186,6 @@
 
         .workspace-item.active {
             background: #f0f7ff;
-        }
-
-        .workspace-color {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-right: 16px;
-            color: white;
-            font-weight: 600;
         }
 
         .workspace-info {
@@ -222,9 +210,10 @@
 
         .workspace-meta {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
-            margin-right: 12px;
+            margin-right: 8px;
+            flex-shrink: 0;
         }
 
         .workspace-count {
@@ -233,28 +222,9 @@
             background: #f0f0f0;
             padding: 4px 10px;
             border-radius: 12px;
+            white-space: nowrap;
         }
 
-        .workspace-type {
-            font-size: 12px;
-            color: #666;
-            background: #e8f4fd;
-            padding: 4px 10px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .workspace-type.team {
-            background: #fff4e6;
-            color: #e67e22;
-        }
-
-        .workspace-type.personal {
-            background: #e8f4fd;
-            color: #3498db;
-        }
 
         .workspace-date {
             font-size: 12px;
@@ -579,20 +549,15 @@
             countElement.textContent = workspacesToRender.length;
 
             listContainer.innerHTML = workspacesToRender.map(ws => {
-                const typeLabel = ws.type === 'personal' ? '개인' : '팀';
                 const memberInfo = ws.type === 'team' ? `멤버 ${ws.memberCount}명` : '';
                 
                 return `
                 <div class="workspace-item ${ws.active ? 'active' : ''}" onclick="selectWorkspace(${ws.id})" style="border-color: ${ws.color};">
-                    <div class="workspace-color" style="background: ${ws.color};">
-                        ${ws.name.charAt(0)}
-                    </div>
                     <div class="workspace-info">
                         <div class="workspace-name">${ws.name}</div>
                         <div class="workspace-desc">${ws.description}</div>
                     </div>
                     <div class="workspace-meta">
-                        <div class="workspace-type ${ws.type}">${typeLabel}</div>
                         ${ws.type === 'team' ? `<div class="workspace-count">${memberInfo}</div>` : ''}
                         <div class="workspace-count">퀘스트 ${ws.questCount}개</div>
                         <div class="workspace-date">${formatDate(ws.createdAt)}</div>
